@@ -1,0 +1,28 @@
+# Node
+node_modules/
+npm-debug.log
+yarn-error.log
+
+# Expo
+.expo/
+dist/
+web-build/
+
+# Native
+ios/
+android/
+
+# Metro
+.metro-health-check*
+
+# Environment
+.env
+.env.local
+.env*.local
+
+# macOS / Windows
+.DS_Store
+Thumbs.db
+
+# TypeScript
+*.tsbuildinfo

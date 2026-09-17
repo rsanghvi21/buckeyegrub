@@ -1,4 +1,14 @@
-# Agents.md – Multi-Agent Collaboration & Architecture Guide
+# AGENTS.md – Multi-Agent Collaboration & Architecture Guide
+
+## Agent skills
+
+### Issue tracker
+Issues and specs live as GitHub issues (uses the `gh` CLI). See `docs/agents/issue-tracker.md`.
+
+### Domain docs
+Single-context layout: `CONTEXT.md` + `docs/adr/` at the repo root. See `docs/agents/domain.md`.
+
+---
 
 ## Overview
 This document defines the roles, responsibilities, standards, and handover protocols for AI agents and human developers working on **BuckeyeGrub**—a cross-platform nutrition and campus dining application tailored for The Ohio State University (OSU) students.

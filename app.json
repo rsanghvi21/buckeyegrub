@@ -1,0 +1,35 @@
+{
+  "expo": {
+    "name": "BuckeyeGrub",
+    "slug": "buckeyegrub",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/icon.png",
+    "scheme": "buckeyegrub",
+    "userInterfaceStyle": "automatic",
+    "splash": {
+      "backgroundColor": "#BA0C2F"
+    },
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "edu.osu.buckeyegrub"
+    },
+    "android": {
+      "adaptiveIcon": {
+        "backgroundColor": "#BA0C2F"
+      },
+      "package": "edu.osu.buckeyegrub"
+    },
+    "web": {
+      "bundler": "metro",
+      "output": "single"
+    },
+    "plugins": [
+      "expo-router",
+      "expo-asset"
+    ],
+    "experiments": {
+      "typedRoutes": true
+    }
+  }
+}
