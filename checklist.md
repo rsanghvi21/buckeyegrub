@@ -7,16 +7,16 @@
 ---
 
 ## Checkpoint 1: Project Scaffolding & Tooling Setup
-- [ ] Initialize Expo project with TypeScript template and Expo Router (`app/` directory).
-- [ ] Install production dependencies:
+- [x] Initialize Expo project with TypeScript template and Expo Router (`app/` directory).
+- [x] Install production dependencies:
   - Navigation: `expo-router`, `expo-linking`, `expo-constants`, `expo-status-bar`
   - UI & Animation: `react-native-reanimated`, `react-native-gesture-handler`, `react-native-svg`, `lucide-react-native`
   - State & Storage: `zustand`, `@react-native-async-storage/async-storage`
-- [ ] Configure `app.json` (scheme: `buckeyegrub`, orientation, adaptive icons, web bundler `metro`).
-- [ ] Configure `tsconfig.json` with strict type checking and `@/` path alias.
-- [ ] Configure `babel.config.js` with `react-native-reanimated/plugin`.
-- [ ] Verify clean build and type check (`npx tsc --noEmit`).
-- **Gate 1 Acceptance Criteria**: Project starts on Expo web with no errors; basic blank layout renders.
+- [x] Configure `app.json` (scheme: `buckeyegrub`, orientation, adaptive icons, web bundler `metro`).
+- [x] Configure `tsconfig.json` with strict type checking and `@/` path alias.
+- [x] Configure `babel.config.js` with `react-native-reanimated/plugin`.
+- [x] Verify clean build and type check (`npx tsc --noEmit`).
+- **Gate 1 Acceptance Criteria**: [PASSED] Project bundles and exports clean for Expo web with zero errors; root layout and basic screen render.
 
 ---
 
