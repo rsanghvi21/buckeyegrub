@@ -21,22 +21,22 @@
 ---
 
 ## Checkpoint 2: OSU Design System & Component Library
-- [ ] Create `src/constants/theme.ts` with official OSU palette:
+- [x] Create `src/constants/theme.ts` with official OSU palette:
   - Scarlet: `#BA0C2F` / `#BB0000`
   - Buckeye Gray: `#A7B1B7` / `#666666`
   - Neutral Dark: `#1E1E24`
   - Light Background: `#F8F9FA`
   - Surface White: `#FFFFFF`
   - Accent Gold: `#D4AF37`
-- [ ] Implement atomic UI primitives under `src/components/ui/`:
-  - [ ] `Button.tsx` (Primary Scarlet, Secondary Grey, Outline, Icon buttons with press animations).
-  - [ ] `Card.tsx` (Elevated card with borders, rounded corners, shadow).
-  - [ ] `Badge.tsx` (Dietary tags: High-Protein, Vegan, Halal, Gluten-Free).
-  - [ ] `Input.tsx` (Branded text input with focus states).
-  - [ ] `MacroRing.tsx` (Animated SVG circular progress ring for calories/macros).
-  - [ ] `ProgressBar.tsx` (Horizontal animated macro bar for Protein, Carbs, Fat).
-- [ ] Create global navigation header component `src/components/navigation/Header.tsx` with Buckeye leaf motif.
-- **Gate 2 Acceptance Criteria**: UI components render with theme colors and responsive scaling; animations execute smoothly without console warnings.
+- [x] Implement atomic UI primitives under `src/components/ui/`:
+  - [x] `Button.tsx` (Primary Scarlet, Secondary Grey, Outline, Icon buttons with press animations).
+  - [x] `Card.tsx` (Elevated card with borders, rounded corners, shadow).
+  - [x] `Badge.tsx` (Dietary tags: High-Protein, Vegan, Halal, Gluten-Free).
+  - [x] `Input.tsx` (Branded text input with focus states).
+  - [x] `MacroRing.tsx` (Animated SVG circular progress ring for calories/macros).
+  - [x] `ProgressBar.tsx` (Horizontal animated macro bar for Protein, Carbs, Fat).
+- [x] Create global navigation header component `src/components/navigation/Header.tsx` with Buckeye leaf motif.
+- **Gate 2 Acceptance Criteria**: [PASSED] UI components render with theme colors and responsive scaling; animations execute smoothly without console warnings.
 
 ---
 

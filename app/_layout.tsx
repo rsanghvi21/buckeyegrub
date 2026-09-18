@@ -6,15 +6,13 @@ import { StyleSheet } from 'react-native';
 export default function RootLayout() {
   return (
     <GestureHandlerRootView style={styles.container}>
-      <StatusBar style="light" />
+      <StatusBar style="dark" />
       <Stack
         screenOptions={{
-          headerStyle: { backgroundColor: '#BA0C2F' },
-          headerTintColor: '#FFFFFF',
-          headerTitleStyle: { fontWeight: 'bold' },
+          headerShown: false,
         }}
       >
-        <Stack.Screen name="index" options={{ title: 'BuckeyeGrub' }} />
+        <Stack.Screen name="index" />
       </Stack>
     </GestureHandlerRootView>
   );
