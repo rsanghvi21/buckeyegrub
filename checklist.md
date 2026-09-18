@@ -21,22 +21,27 @@
 ---
 
 ## Checkpoint 2: OSU Design System & Component Library
-- [ ] Create `src/constants/theme.ts` with official OSU palette:
+- [x] Create `src/constants/theme.ts` with official OSU palette & seamless Light/Dark theme support:
   - Scarlet: `#BA0C2F` / `#BB0000`
   - Buckeye Gray: `#A7B1B7` / `#666666`
   - Neutral Dark: `#1E1E24`
-  - Light Background: `#F8F9FA`
-  - Surface White: `#FFFFFF`
+  - Light Background: `#F8F9FA` / Dark Background: `#121216`
+  - Surface White: `#FFFFFF` / Dark Surface: `#1E1E24`
   - Accent Gold: `#D4AF37`
-- [ ] Implement atomic UI primitives under `src/components/ui/`:
-  - [ ] `Button.tsx` (Primary Scarlet, Secondary Grey, Outline, Icon buttons with press animations).
-  - [ ] `Card.tsx` (Elevated card with borders, rounded corners, shadow).
-  - [ ] `Badge.tsx` (Dietary tags: High-Protein, Vegan, Halal, Gluten-Free).
-  - [ ] `Input.tsx` (Branded text input with focus states).
-  - [ ] `MacroRing.tsx` (Animated SVG circular progress ring for calories/macros).
-  - [ ] `ProgressBar.tsx` (Horizontal animated macro bar for Protein, Carbs, Fat).
-- [ ] Create global navigation header component `src/components/navigation/Header.tsx` with Buckeye leaf motif.
-- **Gate 2 Acceptance Criteria**: UI components render with theme colors and responsive scaling; animations execute smoothly without console warnings.
+- [x] Implement atomic UI primitives under `src/components/ui/`:
+  - [x] `Button.tsx` (Primary Scarlet, Secondary Buckeye Grey, Outline, Icon buttons with press animations).
+  - [x] `Card.tsx` (Elevated card with borders, rounded corners, shadow).
+  - [x] `SwipeableCard.tsx` (Swipeable meal cards with gesture actions for swap, favorite, log).
+  - [x] `Badge.tsx` (Dietary tags: High-Protein, Vegan, Halal, Gluten-Free; pre-scaffolded payment badges for Checkpoints 3 & 8).
+  - [x] `Input.tsx` (Branded text input with focus states).
+  - [x] `MacroRing.tsx` (Animated SVG circular progress ring for calories/macros, cross-platform Web & Native).
+  - [x] `ProgressBar.tsx` (Horizontal animated macro bar for Protein, Carbs, Fat).
+- [x] Create global navigation header component `src/components/navigation/Header.tsx` with Buckeye leaf motif and dynamic safe area insets.
+- **Gate 2 Acceptance Criteria**: [PASSED] UI components render with theme colors and responsive scaling; animations execute smoothly without console warnings.
+- **Commit History**:
+  - `853ba87` (2026-09-18T10:24:00-04:00): `feat(design-system): implement checkpoint 2 - OSU theme tokens and atomic UI primitives`
+  - `141fea6` (2026-09-18T10:33:00-04:00): `chore(agents): configure code-review skill and skills-lock.json`
+  - `1602ef2` (2026-09-18T10:49:00-04:00): `fix(design-system): remediate code review findings for theme, safe areas, and swipe gestures`
 
 ---
 
