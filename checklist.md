@@ -41,7 +41,7 @@
 - **Commit History**:
   - `853ba87` (2026-09-18T10:24:00-04:00): `feat(design-system): implement checkpoint 2 - OSU theme tokens and atomic UI primitives`
   - `141fea6` (2026-09-18T10:33:00-04:00): `chore(agents): configure code-review skill and skills-lock.json`
-  - `[PENDING]`: `fix(design-system): remediate code review findings for theme, safe areas, and swipe gestures`
+  - `1602ef2` (2026-09-18T10:49:00-04:00): `fix(design-system): remediate code review findings for theme, safe areas, and swipe gestures`
 
 ---
 
