@@ -80,7 +80,7 @@ export const MacroRing: React.FC<MacroRingProps> = ({
   return (
     <View style={[styles.container, { width: size, height: size }, style]}>
       <Svg width={size} height={size} viewBox={`0 0 ${size} ${size}`}>
-        <G rotation="-90" origin={`${center}, ${center}`}>
+        <G transform={`rotate(-90 ${center} ${center})`}>
           {/* Background Track Circle */}
           <Circle
             cx={center}

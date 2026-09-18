@@ -1,6 +1,7 @@
 import React, { useRef } from 'react';
 import {
   Animated,
+  Platform,
   Pressable,
   StyleProp,
   StyleSheet,
@@ -143,6 +144,16 @@ export const SwipeableCard: React.FC<SwipeableCardProps> = ({
       </View>
     );
   };
+
+  if (Platform.OS === 'web') {
+    return (
+      <View style={[styles.root, containerStyle]}>
+        <Card style={style} {...cardProps}>
+          {children}
+        </Card>
+      </View>
+    );
+  }
 
   return (
     <View style={[styles.root, containerStyle]}>

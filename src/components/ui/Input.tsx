@@ -1,11 +1,10 @@
 import React, { useState } from 'react';
 import {
-  NativeSyntheticEvent,
+  Platform,
   StyleProp,
   StyleSheet,
   Text,
   TextInput,
-  TextInputFocusEventData,
   TextInputProps,
   TextStyle,
   View,
@@ -117,13 +116,18 @@ const styles = StyleSheet.create({
     paddingHorizontal: spacing.md,
     height: 48,
   },
-  focusedShadow: {
-    shadowColor: colors.scarlet,
-    shadowOffset: { width: 0, height: 0 },
-    shadowOpacity: 0.15,
-    shadowRadius: 4,
-    elevation: 2,
-  },
+  focusedShadow: Platform.select<ViewStyle>({
+    web: {
+      boxShadow: '0px 0px 4px rgba(186, 12, 47, 0.25)',
+    } as ViewStyle,
+    default: {
+      shadowColor: colors.scarlet,
+      shadowOffset: { width: 0, height: 0 },
+      shadowOpacity: 0.15,
+      shadowRadius: 4,
+      elevation: 2,
+    },
+  })!,
   input: {
     flex: 1,
     height: '100%',
