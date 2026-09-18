@@ -60,9 +60,10 @@
   - [x] Berry Cafe (Thompson Library)
 - [x] Populate `src/data/osuMenuItems.ts` with 50+ real campus items with accurate calories, protein, carbs, fat, fiber, price, swipe eligibility, and allergen tags.
 - [x] Implement `src/services/nutrislice/nutrisliceClient.ts` with caching, venue filtering, macro sorting, and search.
-- **Gate 3 Acceptance Criteria**: [PASSED] Data layer returns accurate dining venues (12 venues) and menu items (63 items) filtered by campus zone, payment type, or dietary restriction; 91 automated verification assertions passed.
+- **Gate 3 Acceptance Criteria**: [PASSED] Data layer returns accurate dining venues (12 venues) and menu items (63 items) filtered by campus zone, payment type, or dietary restriction; 106 automated verification assertions passed.
 - **Commit History**:
   - `fc79a6b` (2026-09-18T13:37:40-04:00): `feat(dining): implement checkpoint 3 - campus dining and nutrislice catalog`
+  - `43d62cb` (2026-09-18T14:53:30-04:00): `fix(dining): remediate code review findings for Checkpoint 3`
 
 ---
 
