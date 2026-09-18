@@ -23,6 +23,7 @@ export const OSU_VENUES: DiningVenue[] = [
     hasMobileOrdering: true,
     grubhubSlug: 'traditions-at-scott-160-w-woodruff-ave',
     grubhubUrl: 'https://www.grubhub.com/restaurant/traditions-at-scott-160-w-woodruff-ave-columbus/2693892',
+    grubhubUri: 'grubhub://restaurant/traditions-at-scott-160-w-woodruff-ave',
     coordinates: {
       latitude: 40.00452,
       longitude: -83.013241,
@@ -53,6 +54,7 @@ export const OSU_VENUES: DiningVenue[] = [
     hasMobileOrdering: true,
     grubhubSlug: 'traditions-at-kennedy-251-w-12th-ave',
     grubhubUrl: 'https://www.grubhub.com/restaurant/traditions-at-kennedy-251-w-12th-ave-columbus/2693893',
+    grubhubUri: 'grubhub://restaurant/traditions-at-kennedy-251-w-12th-ave',
     coordinates: {
       latitude: 39.99849,
       longitude: -83.01353,
@@ -83,6 +85,7 @@ export const OSU_VENUES: DiningVenue[] = [
     hasMobileOrdering: true,
     grubhubSlug: 'traditions-at-morrill-1900-cannon-dr',
     grubhubUrl: 'https://www.grubhub.com/restaurant/traditions-at-morrill-1900-cannon-dr-columbus/2693894',
+    grubhubUri: 'grubhub://restaurant/traditions-at-morrill-1900-cannon-dr',
     coordinates: {
       latitude: 40.00192,
       longitude: -83.02422,
@@ -113,6 +116,7 @@ export const OSU_VENUES: DiningVenue[] = [
     hasMobileOrdering: true,
     grubhubSlug: 'curl-market-80-w-woodruff-ave',
     grubhubUrl: 'https://www.grubhub.com/restaurant/curl-market-80-w-woodruff-ave-columbus/2693888',
+    grubhubUri: 'grubhub://restaurant/curl-market-80-w-woodruff-ave',
     coordinates: {
       latitude: 40.00424,
       longitude: -83.01015,
@@ -143,6 +147,7 @@ export const OSU_VENUES: DiningVenue[] = [
     hasMobileOrdering: true,
     grubhubSlug: 'union-market-1739-n-high-st',
     grubhubUrl: 'https://www.grubhub.com/restaurant/union-market-1739-n-high-st-columbus/2693895',
+    grubhubUri: 'grubhub://restaurant/union-market-1739-n-high-st',
     coordinates: {
       latitude: 39.99786,
       longitude: -83.00866,
@@ -173,6 +178,7 @@ export const OSU_VENUES: DiningVenue[] = [
     hasMobileOrdering: true,
     grubhubSlug: '12th-avenue-bread-company-251-w-12th-ave',
     grubhubUrl: 'https://www.grubhub.com/restaurant/12th-avenue-bread-company-251-w-12th-ave-columbus/2693880',
+    grubhubUri: 'grubhub://restaurant/12th-avenue-bread-company-251-w-12th-ave',
     coordinates: {
       latitude: 39.99834,
       longitude: -83.01362,
@@ -193,6 +199,7 @@ export const OSU_VENUES: DiningVenue[] = [
     name: 'Marketplace on Neil',
     shortName: 'Neil Market',
     slug: 'marketplace',
+    aliases: ['neil-avenue-cafe', 'neil-cafe', 'neil-avenue'],
     nutrisliceSchoolId: 58218,
     zone: 'South',
     address: '1578 Neil Ave, Columbus, OH 43210',
@@ -203,6 +210,7 @@ export const OSU_VENUES: DiningVenue[] = [
     hasMobileOrdering: true,
     grubhubSlug: 'marketplace-on-neil-1578-neil-ave',
     grubhubUrl: 'https://www.grubhub.com/restaurant/marketplace-on-neil-1578-neil-ave-columbus/2693889',
+    grubhubUri: 'grubhub://restaurant/marketplace-on-neil-1578-neil-ave',
     coordinates: {
       latitude: 39.99498,
       longitude: -83.01633,
@@ -232,6 +240,7 @@ export const OSU_VENUES: DiningVenue[] = [
     hasMobileOrdering: true,
     grubhubSlug: 'pad-pizza-delivery-160-w-woodruff-ave',
     grubhubUrl: 'https://www.grubhub.com/restaurant/pad-pizza-delivery-160-w-woodruff-ave-columbus/2693891',
+    grubhubUri: 'grubhub://restaurant/pad-pizza-delivery-160-w-woodruff-ave',
     coordinates: {
       latitude: 40.00445,
       longitude: -83.01318,
@@ -262,6 +271,7 @@ export const OSU_VENUES: DiningVenue[] = [
     hasMobileOrdering: true,
     grubhubSlug: 'woodys-tavern-1739-n-high-st',
     grubhubUrl: 'https://www.grubhub.com/restaurant/woodys-tavern-1739-n-high-st-columbus/2693896',
+    grubhubUri: 'grubhub://restaurant/woodys-tavern-1739-n-high-st',
     coordinates: {
       latitude: 39.99786,
       longitude: -83.00866,
@@ -292,6 +302,7 @@ export const OSU_VENUES: DiningVenue[] = [
     hasMobileOrdering: true,
     grubhubSlug: 'berry-cafe-1858-neil-ave',
     grubhubUrl: 'https://www.grubhub.com/restaurant/berry-cafe-1858-neil-ave-columbus/2693881',
+    grubhubUri: 'grubhub://restaurant/berry-cafe-1858-neil-ave',
     coordinates: {
       latitude: 39.99898,
       longitude: -83.01485,
@@ -322,6 +333,7 @@ export const OSU_VENUES: DiningVenue[] = [
     hasMobileOrdering: true,
     grubhubSlug: 'courtside-cafe-337-annie-and-john-glenn-ave',
     grubhubUrl: 'https://www.grubhub.com/restaurant/courtside-cafe-337-annie-and-john-glenn-ave-columbus/2693887',
+    grubhubUri: 'grubhub://restaurant/courtside-cafe-337-annie-and-john-glenn-ave',
     coordinates: {
       latitude: 39.99961,
       longitude: -83.01832,
@@ -352,6 +364,7 @@ export const OSU_VENUES: DiningVenue[] = [
     hasMobileOrdering: true,
     grubhubSlug: 'connecting-grounds-160-w-woodruff-ave',
     grubhubUrl: 'https://www.grubhub.com/restaurant/connecting-grounds-160-w-woodruff-ave-columbus/2693886',
+    grubhubUri: 'grubhub://restaurant/connecting-grounds-160-w-woodruff-ave',
     coordinates: {
       latitude: 40.00451,
       longitude: -83.01319,
@@ -372,6 +385,11 @@ export const OSU_VENUES: DiningVenue[] = [
 export const OSU_VENUES_MAP: Record<string, DiningVenue> = OSU_VENUES.reduce(
   (acc, venue) => {
     acc[venue.id] = venue;
+    if (venue.aliases) {
+      for (const alias of venue.aliases) {
+        acc[alias] = venue;
+      }
+    }
     return acc;
   },
   {} as Record<string, DiningVenue>

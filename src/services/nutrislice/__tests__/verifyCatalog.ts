@@ -87,8 +87,18 @@ async function runAllTests(): Promise<void> {
         `Grubhub slug configured for ${venue.name}`,
         `Missing Grubhub slug for ${venue.name}`
       );
+      assert(
+        !!venue.grubhubUri && venue.grubhubUri.startsWith('grubhub://restaurant/'),
+        `Grubhub deep-link URI scheme configured for ${venue.name}`,
+        `Missing or invalid Grubhub URI for ${venue.name}`
+      );
     }
   }
+
+  assert(
+    OSU_VENUES_MAP['neil-avenue-cafe']?.id === 'marketplace-on-neil',
+    'Venue alias neil-avenue-cafe resolves to marketplace-on-neil in OSU_VENUES_MAP'
+  );
 
   // =========================================================================
   // 2. Menu Items Catalog Verification (50+ Real Items)
@@ -143,6 +153,10 @@ async function runAllTests(): Promise<void> {
 
   assert(swipeItems.length >= 15, `Traditions swipe items >= 15 (Actual: ${swipeItems.length})`);
   assert(retailItems.length >= 25, `Retail dining items >= 25 (Actual: ${retailItems.length})`);
+  assert(
+    swipeItems.every((i) => i.price > 0 && i.diningDollarsPrice > 0),
+    'All Traditions swipe items have official meal period door rates (> $0) for non-swipe payment'
+  );
 
   // =========================================================================
   // 3. Client Venue Filtering Verification
@@ -256,6 +270,16 @@ async function runAllTests(): Promise<void> {
     `sortMenuItems 'proteinRatio' identifies top protein density meal (${topRatioItem.name}: ${topRatio.toFixed(1)}g / 100 kcal)`
   );
 
+  // Payment filter: buckid_cash
+  const buckidCashItems = nutrisliceClient.filterMenuItems(OSU_MENU_ITEMS, {
+    paymentType: 'buckid_cash',
+  });
+  assert(
+    buckidCashItems.length > 0 &&
+      buckidCashItems.every((i) => OSU_VENUES_MAP[i.venueId]?.acceptedPayments.includes('buckid_cash')),
+    `filterMenuItems 'buckid_cash' returns items from venues accepting BuckID Cash (${buckidCashItems.length} found)`
+  );
+
   // Search
   const salmonResults = nutrisliceClient.searchMenuItems('salmon');
   assert(
@@ -304,6 +328,7 @@ async function runAllTests(): Promise<void> {
                 food_icons: [
                   { name: 'No gluten', sprite: { slug: 'gluten-free' } },
                   { name: 'Halal' },
+                  { name: 'Soy', sprite: { slug: 'soy' } },
                 ],
               },
             },
@@ -324,6 +349,7 @@ async function runAllTests(): Promise<void> {
     assert(item.macros.protein === 44, 'Correct protein mapped');
     assert(item.dietaryTags.includes('highProtein'), 'High-protein auto-tagged (>= 25g)');
     assert(item.dietaryTags.includes('glutenFree'), 'Gluten-free icon mapped');
+    assert(item.allergens.includes('Soy'), 'Soy allergen extracted and typed from Nutrislice icon');
     assert(item.swipeEligible === true, 'Traditions venue maps swipeEligible = true');
   }
 
@@ -343,6 +369,12 @@ async function runAllTests(): Promise<void> {
   assert(
     scottMenu.length >= 5,
     `getVenueMenu returns menu items with offline fallback (${scottMenu.length} items for Scott)`
+  );
+
+  const neilMenu = await nutrisliceClient.getVenueMenu('neil-avenue-cafe');
+  assert(
+    neilMenu.length >= 3,
+    `getVenueMenu resolves alias 'neil-avenue-cafe' (${neilMenu.length} items returned)`
   );
 
   // =========================================================================

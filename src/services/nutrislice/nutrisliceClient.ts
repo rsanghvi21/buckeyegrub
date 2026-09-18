@@ -6,6 +6,8 @@
  */
 
 import {
+  AllergenTag,
+  calculateDiningDollarDiscount,
   CampusZone,
   DiningFilterOptions,
   DiningVenue,
@@ -38,8 +40,18 @@ interface CacheEntry<T> {
   timestamp: number;
 }
 
+const SORT_VALUE_EXTRACTORS: Record<MacroSortField, (item: MenuItem) => number> = {
+  calories: (item) => item.calories,
+  protein: (item) => item.macros.protein,
+  carbs: (item) => item.macros.carbs,
+  fat: (item) => item.macros.fat,
+  proteinRatio: (item) => (item.calories > 0 ? (item.macros.protein / item.calories) * 100 : 0),
+  price: (item) => item.price,
+};
+
 export class NutrisliceClient {
   private venuesCache: CacheEntry<DiningVenue[]> | null = null;
+  private schoolsCache: CacheEntry<NutrisliceRawSchool[]> | null = null;
   private venueMenuCache = new Map<string, CacheEntry<MenuItem[]>>();
   private allItemsCache: CacheEntry<MenuItem[]> | null = null;
 
@@ -270,6 +282,7 @@ export class NutrisliceClient {
         const sodium = nutrition.mg_sodium ?? undefined;
 
         const dietaryTags = this.extractDietaryTags(food, protein);
+        const allergens = this.extractAllergens(food);
         const price = food.price ?? item.price ?? 0;
         const swipeEligible = venue.venueType === 'traditions';
         const diningDollarsPrice = this.calculateDiningDollarDiscount(price);
@@ -293,7 +306,7 @@ export class NutrisliceClient {
           price,
           swipeEligible,
           diningDollarsPrice,
-          allergens: [],
+          allergens,
           dietaryTags,
           servingSize: food.serving_size_info
             ? {
@@ -362,6 +375,108 @@ export class NutrisliceClient {
   }
 
   /**
+   * Extracts typed AllergenTags from Nutrislice food icons, synced ingredients,
+   * and description text.
+   */
+  private extractAllergens(food: NutrisliceRawFood): AllergenTag[] {
+    const allergens: AllergenTag[] = [];
+    const textToSearch = [
+      food.ingredients || '',
+      food.synced_ingredients || '',
+      food.description || '',
+      food.subtext || '',
+    ]
+      .join(' ')
+      .toLowerCase();
+
+    const addIfMissing = (tag: AllergenTag) => {
+      if (!allergens.includes(tag)) allergens.push(tag);
+    };
+
+    // 1. Check food icons
+    const icons = food.icons?.food_icons || [];
+    for (const icon of icons) {
+      const name = (icon.name || icon.slug || icon.synced_name || '').toLowerCase();
+      const spriteSlug = (icon.sprite?.slug || '').toLowerCase();
+
+      if (
+        name.includes('milk') ||
+        name.includes('dairy') ||
+        spriteSlug.includes('milk') ||
+        spriteSlug.includes('dairy')
+      ) {
+        addIfMissing('Dairy');
+      }
+      if (name.includes('egg') || spriteSlug.includes('egg')) {
+        addIfMissing('Eggs');
+      }
+      if (name.includes('fish') || spriteSlug.includes('fish')) {
+        addIfMissing('Fish');
+      }
+      if (
+        name.includes('shellfish') ||
+        spriteSlug.includes('shellfish') ||
+        name.includes('crustacean')
+      ) {
+        addIfMissing('Shellfish');
+      }
+      if (
+        name.includes('tree nut') ||
+        spriteSlug.includes('tree-nut') ||
+        spriteSlug.includes('treenut')
+      ) {
+        addIfMissing('Tree Nuts');
+      }
+      if (name.includes('peanut') || spriteSlug.includes('peanut')) {
+        addIfMissing('Peanuts');
+      }
+      if (name.includes('wheat') || spriteSlug.includes('wheat')) {
+        addIfMissing('Wheat');
+      }
+      if (name.includes('soy') || spriteSlug.includes('soy')) {
+        addIfMissing('Soy');
+      }
+      if (name.includes('sesame') || spriteSlug.includes('sesame')) {
+        addIfMissing('Sesame');
+      }
+      if (name.includes('gluten') || spriteSlug.includes('gluten')) {
+        addIfMissing('Gluten');
+      }
+    }
+
+    // 2. Check ingredients / allergen statements
+    if (/\b(milk|dairy|cheese|cream|butter|whey|yogurt)\b/i.test(textToSearch)) {
+      addIfMissing('Dairy');
+    }
+    if (/\b(egg|eggs|albumin|mayonnaise)\b/i.test(textToSearch)) {
+      addIfMissing('Eggs');
+    }
+    if (/\b(fish|salmon|tuna|cod|tilapia|pollock)\b/i.test(textToSearch)) {
+      addIfMissing('Fish');
+    }
+    if (/\b(shellfish|shrimp|crab|lobster)\b/i.test(textToSearch)) {
+      addIfMissing('Shellfish');
+    }
+    if (/\b(peanut|peanuts)\b/i.test(textToSearch)) {
+      addIfMissing('Peanuts');
+    }
+    if (/\b(almond|walnut|cashew|pecan|pistachio|hazelnut|tree nut)\b/i.test(textToSearch)) {
+      addIfMissing('Tree Nuts');
+    }
+    if (/\b(wheat|flour|bread|semolina|pasta)\b/i.test(textToSearch)) {
+      addIfMissing('Wheat');
+    }
+    if (/\b(soy|soybean|tamari|tofu|edamame)\b/i.test(textToSearch)) {
+      addIfMissing('Soy');
+    }
+    if (/\b(sesame|tahini)\b/i.test(textToSearch)) {
+      addIfMissing('Sesame');
+    }
+
+    return allergens;
+  }
+
+  /**
    * Merges live normalized items with static items, preserving static curated details.
    */
   private mergeWithStaticItems(
@@ -381,13 +496,25 @@ export class NutrisliceClient {
   }
 
   /**
-   * Fetches raw school list with fallback to empty array.
+   * Fetches raw school list with cache lookup and fallback to empty array.
    */
   private async getRawSchools(): Promise<NutrisliceRawSchool[]> {
+    const now = Date.now();
+    if (this.schoolsCache && now - this.schoolsCache.timestamp < VENUES_CACHE_TTL_MS) {
+      return this.schoolsCache.data;
+    }
+
     try {
-      return await this.fetchWithTimeout<NutrisliceRawSchool[]>(
+      const schools = await this.fetchWithTimeout<NutrisliceRawSchool[]>(
         `${NUTRISLICE_BASE_URL}/schools/`
       );
+      if (Array.isArray(schools) && schools.length > 0) {
+        this.schoolsCache = {
+          data: schools,
+          timestamp: now,
+        };
+      }
+      return schools;
     } catch {
       return [];
     }
@@ -398,7 +525,7 @@ export class NutrisliceClient {
    * e.g., $10.00 * 0.65 = $6.50
    */
   public calculateDiningDollarDiscount(retailPrice: number): number {
-    return Math.round(retailPrice * 0.65 * 100) / 100;
+    return calculateDiningDollarDiscount(retailPrice);
   }
 
   /**
@@ -473,6 +600,12 @@ export class NutrisliceClient {
         if (options.paymentType === 'dining_dollars') {
           const venue = OSU_VENUES_MAP[item.venueId];
           if (!venue?.acceptedPayments.includes('dining_dollars')) {
+            return false;
+          }
+        }
+        if (options.paymentType === 'buckid_cash') {
+          const venue = OSU_VENUES_MAP[item.venueId];
+          if (!venue?.acceptedPayments.includes('buckid_cash')) {
             return false;
           }
         }
@@ -562,34 +695,13 @@ export class NutrisliceClient {
     direction: SortDirection = 'desc'
   ): MenuItem[] {
     const factor = direction === 'asc' ? 1 : -1;
+    const extractor = SORT_VALUE_EXTRACTORS[field];
 
-    return [...items].sort((a, b) => {
-      switch (field) {
-        case 'calories':
-          return (a.calories - b.calories) * factor;
+    if (!extractor) {
+      return items;
+    }
 
-        case 'protein':
-          return (a.macros.protein - b.macros.protein) * factor;
-
-        case 'carbs':
-          return (a.macros.carbs - b.macros.carbs) * factor;
-
-        case 'fat':
-          return (a.macros.fat - b.macros.fat) * factor;
-
-        case 'proteinRatio': {
-          const ratioA = a.calories > 0 ? (a.macros.protein / a.calories) * 100 : 0;
-          const ratioB = b.calories > 0 ? (b.macros.protein / b.calories) * 100 : 0;
-          return (ratioA - ratioB) * factor;
-        }
-
-        case 'price':
-          return (a.price - b.price) * factor;
-
-        default:
-          return 0;
-      }
-    });
+    return [...items].sort((a, b) => (extractor(a) - extractor(b)) * factor);
   }
 
   /**
@@ -608,6 +720,7 @@ export class NutrisliceClient {
    */
   public clearCache(): void {
     this.venuesCache = null;
+    this.schoolsCache = null;
     this.venueMenuCache.clear();
     this.allItemsCache = null;
   }

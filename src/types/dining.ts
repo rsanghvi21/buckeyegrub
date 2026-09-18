@@ -13,6 +13,18 @@ export type VenueType = 'traditions' | 'retail' | 'cafe' | 'grab_and_go';
 
 export type MealCategory = 'breakfast' | 'lunch' | 'dinner' | 'snack' | 'all_day';
 
+export type AllergenTag =
+  | 'Dairy'
+  | 'Eggs'
+  | 'Fish'
+  | 'Shellfish'
+  | 'Tree Nuts'
+  | 'Peanuts'
+  | 'Wheat'
+  | 'Soy'
+  | 'Sesame'
+  | 'Gluten';
+
 export type DayOfWeek =
   | 'monday'
   | 'tuesday'
@@ -36,7 +48,6 @@ export interface OperatingHoursDay {
 export type OperatingHours = Partial<Record<DayOfWeek, OperatingHoursDay>>;
 
 export interface MacroNutrients {
-  calories?: number;
   protein: number; // grams
   carbs: number;   // grams
   fat: number;     // grams
@@ -55,6 +66,7 @@ export interface DiningVenue {
   name: string;
   shortName: string;
   slug: string;
+  aliases?: string[];
   nutrisliceSchoolId?: number;
   zone: CampusZone;
   address: string;
@@ -64,6 +76,7 @@ export interface DiningVenue {
   hasMobileOrdering: boolean;
   grubhubSlug?: string;
   grubhubUrl?: string;
+  grubhubUri?: string;
   coordinates: GeoLocation;
   operatingHours: OperatingHours;
   imageUrl?: string;
@@ -82,12 +95,20 @@ export interface MenuItem {
   price: number;
   swipeEligible: boolean;
   diningDollarsPrice: number;
-  allergens: string[];
+  allergens: AllergenTag[];
   dietaryTags: DietaryTag[];
   servingSize?: ServingSize;
   ingredients?: string[];
   imageUrl?: string;
   customizationRecipe?: string;
+}
+
+/**
+ * Calculates retail price with 35% Dining Dollar discount applied.
+ * e.g., $10.00 * 0.65 = $6.50
+ */
+export function calculateDiningDollarDiscount(retailPrice: number): number {
+  return Math.round(retailPrice * 0.65 * 100) / 100;
 }
 
 export interface DiningFilterOptions {
