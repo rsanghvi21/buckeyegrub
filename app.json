@@ -7,9 +7,6 @@
     "icon": "./assets/icon.png",
     "scheme": "buckeyegrub",
     "userInterfaceStyle": "automatic",
-    "splash": {
-      "backgroundColor": "#BA0C2F"
-    },
     "ios": {
       "supportsTablet": true,
       "bundleIdentifier": "edu.osu.buckeyegrub"

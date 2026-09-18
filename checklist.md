@@ -15,8 +15,10 @@
 - [x] Configure `app.json` (scheme: `buckeyegrub`, orientation, adaptive icons, web bundler `metro`).
 - [x] Configure `tsconfig.json` with strict type checking and `@/` path alias.
 - [x] Configure `babel.config.js` with `react-native-reanimated/plugin`.
+- [x] Upgrade toolchain to Expo SDK 57.0.0 (`expo@~57.0.24`, `react@19.2.3`, `react-native@0.86.3`, `react-native-reanimated@4.5.1`, `typescript@~6.0.3`) for iOS Expo Go client compatibility.
 - [x] Verify clean build and type check (`npx tsc --noEmit`).
-- **Gate 1 Acceptance Criteria**: [PASSED] Project bundles and exports clean for Expo web with zero errors; root layout and basic screen render.
+- [x] Verify 21/21 checks pass on `npx expo-doctor`.
+- **Gate 1 Acceptance Criteria**: [PASSED] Project bundles and exports clean for Expo web and mobile targets with zero errors; SDK 57 fully aligned with official Expo Go client.
 
 ---
 
