@@ -21,6 +21,7 @@ import {
   Input,
   MacroRing,
   ProgressBar,
+  SwipeableCard,
 } from '@/src/components/ui';
 import { colors, radii, spacing, typography } from '@/src/constants/theme';
 
@@ -159,9 +160,23 @@ export default function HomeScreen() {
           </View>
         </Card>
 
-        <Card variant="outlined" padding="md" style={styles.mealCard}>
+        <SwipeableCard
+          variant="outlined"
+          padding="md"
+          style={styles.mealCard}
+          leftAction={{
+            label: 'Favorite',
+            backgroundColor: colors.scarlet,
+            onPress: () => {},
+          }}
+          rightAction={{
+            label: 'Swap',
+            backgroundColor: colors.grayDark,
+            onPress: () => {},
+          }}
+        >
           <View style={styles.cardHeaderRow}>
-            <Text style={styles.mealTitle}>Curl Market – Glazed Salmon</Text>
+            <Text style={styles.mealTitle}>Curl Market – Glazed Salmon (Swipeable)</Text>
             <Badge label="Dining Dollars (35% OFF)" variant="dining-dollars" size="sm" />
           </View>
 
@@ -173,7 +188,7 @@ export default function HomeScreen() {
           <Text style={styles.mealNutrition}>
             520 kcal • 42g Protein • 38g Carbs • 20g Fat
           </Text>
-        </Card>
+        </SwipeableCard>
 
         {/* Section 3: Dietary Tags & Payment Badges */}
         <View style={styles.sectionHeader}>

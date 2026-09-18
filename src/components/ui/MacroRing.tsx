@@ -54,15 +54,19 @@ export const MacroRing: React.FC<MacroRingProps> = ({
   const clampedProgress = Math.min(rawProgress, 1);
   const percentage = Math.round(rawProgress * 100);
 
-  // Animated progress value
+  const isWeb = Platform.OS === 'web';
+
+  // Animated progress value for native platforms
   const progressAnim = useSharedValue(0);
 
   useEffect(() => {
-    progressAnim.value = withTiming(clampedProgress, {
-      duration: 1000,
-      easing: Easing.out(Easing.cubic),
-    });
-  }, [clampedProgress, progressAnim]);
+    if (!isWeb) {
+      progressAnim.value = withTiming(clampedProgress, {
+        duration: 1000,
+        easing: Easing.out(Easing.cubic),
+      });
+    }
+  }, [clampedProgress, progressAnim, isWeb]);
 
   const animatedProps = useAnimatedProps(() => {
     const strokeDashoffset = circumference * (1 - progressAnim.value);
@@ -70,6 +74,8 @@ export const MacroRing: React.FC<MacroRingProps> = ({
       strokeDashoffset,
     };
   });
+
+  const webStrokeDashoffset = circumference * (1 - clampedProgress);
 
   return (
     <View style={[styles.container, { width: size, height: size }, style]}>
@@ -85,18 +91,32 @@ export const MacroRing: React.FC<MacroRingProps> = ({
             fill="transparent"
           />
 
-          {/* Animated Progress Circle */}
-          <AnimatedCircle
-            cx={center}
-            cy={center}
-            r={radius}
-            stroke={color}
-            strokeWidth={strokeWidth}
-            strokeDasharray={`${circumference} ${circumference}`}
-            animatedProps={animatedProps}
-            strokeLinecap="round"
-            fill="transparent"
-          />
+          {/* Progress Circle: Web uses CSS transition, Native uses Reanimated UI thread */}
+          {isWeb ? (
+            <Circle
+              cx={center}
+              cy={center}
+              r={radius}
+              stroke={color}
+              strokeWidth={strokeWidth}
+              strokeDasharray={`${circumference} ${circumference}`}
+              strokeDashoffset={webStrokeDashoffset}
+              strokeLinecap="round"
+              fill="transparent"
+            />
+          ) : (
+            <AnimatedCircle
+              cx={center}
+              cy={center}
+              r={radius}
+              stroke={color}
+              strokeWidth={strokeWidth}
+              strokeDasharray={`${circumference} ${circumference}`}
+              animatedProps={animatedProps}
+              strokeLinecap="round"
+              fill="transparent"
+            />
+          )}
         </G>
       </Svg>
 

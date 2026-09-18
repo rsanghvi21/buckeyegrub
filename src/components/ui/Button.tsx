@@ -115,7 +115,7 @@ export const Button: React.FC<ButtonProps> = ({
       ]}
     >
       {loading ? (
-        <ActivityIndicator color={textColor} size={size === 'sm' ? 'small' : 'small'} />
+        <ActivityIndicator color={textColor} size="small" />
       ) : (
         <View style={baseStyles.contentRow}>
           {leftIcon ? <View style={baseStyles.leftIconContainer}>{leftIcon}</View> : null}
@@ -173,7 +173,7 @@ const variantStyles = StyleSheet.create({
     borderWidth: 0,
   },
   secondary: {
-    backgroundColor: colors.grayWash,
+    backgroundColor: colors.grayLight,
     borderWidth: 1,
     borderColor: colors.grayBorder,
   },

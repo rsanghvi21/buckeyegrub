@@ -69,7 +69,7 @@ export const Input: React.FC<InputProps> = ({
           styles.inputContainer,
           {
             borderColor: getBorderColor(),
-            backgroundColor: isFocused ? colors.surface : colors.surface,
+            backgroundColor: colors.surface,
           },
           isFocused && styles.focusedShadow,
         ]}

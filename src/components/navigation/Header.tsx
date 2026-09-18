@@ -8,6 +8,7 @@ import {
   ViewStyle,
 } from 'react-native';
 import { useRouter } from 'expo-router';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { ChevronLeft } from 'lucide-react-native';
 import { colors, radii, shadows, spacing, typography } from '@/src/constants/theme';
 import { BuckeyeLeaf } from './BuckeyeLeaf';
@@ -36,6 +37,7 @@ export const Header: React.FC<HeaderProps> = ({
   style,
 }) => {
   const router = useRouter();
+  const insets = useSafeAreaInsets();
 
   const handleBack = () => {
     if (onBack) {
@@ -48,15 +50,23 @@ export const Header: React.FC<HeaderProps> = ({
   const isScarlet = variant === 'scarlet';
   const isTransparent = variant === 'transparent';
 
+  // Dynamic safe area inset padding
+  const topPadding = Math.max(insets.top, spacing.xs);
+
   const containerStyle = [
     styles.container,
+    { paddingTop: topPadding },
     isScarlet ? styles.scarletContainer : isTransparent ? styles.transparentContainer : styles.surfaceContainer,
     style,
   ];
 
   const titleColor = isScarlet ? colors.textInverse : colors.textPrimary;
-  const subtitleColor = isScarlet ? 'rgba(255, 255, 255, 0.85)' : colors.textSecondary;
+  const subtitleColor = isScarlet ? colors.white85 : colors.textSecondary;
   const iconColor = isScarlet ? colors.textInverse : colors.textPrimary;
+
+  // Extracted leaf color logic
+  const leafColor = isScarlet ? colors.textInverse : colors.scarlet;
+  const leafStemColor = isScarlet ? colors.white60 : colors.grayDark;
 
   return (
     <View style={containerStyle}>
@@ -77,8 +87,8 @@ export const Header: React.FC<HeaderProps> = ({
             <View style={styles.leafWrapper}>
               <BuckeyeLeaf
                 size={30}
-                color={isScarlet ? colors.textInverse : colors.scarlet}
-                stemColor={isScarlet ? 'rgba(255, 255, 255, 0.6)' : colors.grayDark}
+                color={leafColor}
+                stemColor={leafStemColor}
               />
             </View>
           ) : null}
@@ -106,8 +116,8 @@ export const Header: React.FC<HeaderProps> = ({
           ) : showBack && showBuckeyeLeaf ? (
             <BuckeyeLeaf
               size={24}
-              color={isScarlet ? colors.textInverse : colors.scarlet}
-              stemColor={isScarlet ? 'rgba(255, 255, 255, 0.6)' : colors.grayDark}
+              color={leafColor}
+              stemColor={leafStemColor}
             />
           ) : (
             <View style={styles.rightPlaceholder} />
@@ -124,7 +134,6 @@ export const Header: React.FC<HeaderProps> = ({
 const styles = StyleSheet.create({
   container: {
     width: '100%',
-    paddingTop: spacing.md,
   },
   surfaceContainer: {
     backgroundColor: colors.surface,

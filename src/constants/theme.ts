@@ -1,9 +1,11 @@
 /**
  * BuckeyeGrub Design System – Theme & Style Tokens
  * Official Ohio State University (OSU) Scarlet & Gray Palette
+ * Supports both Light and Dark theme semantics seamlessly.
  */
 
-export const colors = {
+// Constant Brand & Functional Palette
+export const palette = {
   // Official OSU Brand Colors
   scarlet: '#BA0C2F',
   scarletDark: '#BB0000',
@@ -18,18 +20,17 @@ export const colors = {
   grayBorder: '#D0D7DE',
   grayWash: '#F1F3F5',
 
-  // Neutrals & Surfaces
+  // Absolute Neutrals
   neutralDark: '#1E1E24',
   neutralCharcoal: '#2D2D34',
-  textPrimary: '#1E1E24',
-  textSecondary: '#666666',
-  textMuted: '#8E99A2',
-  textInverse: '#FFFFFF',
+  white: '#FFFFFF',
+  black: '#000000',
 
-  background: '#F8F9FA',
-  surface: '#FFFFFF',
-  surfaceHover: '#F4F5F7',
-  surfaceElevated: '#FFFFFF',
+  // Translucent Tints (for overlays, badges, and icon stems)
+  white85: 'rgba(255, 255, 255, 0.85)',
+  white60: 'rgba(255, 255, 255, 0.60)',
+  black10: 'rgba(0, 0, 0, 0.10)',
+  black25: 'rgba(0, 0, 0, 0.25)',
 
   // Accents
   gold: '#D4AF37',
@@ -106,6 +107,46 @@ export const colors = {
   error: '#BA0C2F',
   info: '#1971C2',
 } as const;
+
+// Light Mode Semantic Colors
+export const lightSemanticColors = {
+  background: '#F8F9FA',
+  surface: '#FFFFFF',
+  surfaceHover: '#F4F5F7',
+  surfaceElevated: '#FFFFFF',
+  border: '#D0D7DE',
+  grayBorder: '#D0D7DE',
+  textPrimary: '#1E1E24',
+  textSecondary: '#666666',
+  textMuted: '#8E99A2',
+  textInverse: '#FFFFFF',
+} as const;
+
+// Dark Mode Semantic Colors
+export const darkSemanticColors = {
+  background: '#121216',
+  surface: '#1E1E24',
+  surfaceHover: '#2A2A34',
+  surfaceElevated: '#25252D',
+  border: '#3A3A46',
+  grayBorder: '#3A3A46',
+  textPrimary: '#F8F9FA',
+  textSecondary: '#A7B1B7',
+  textMuted: '#7E8B95',
+  textInverse: '#1E1E24',
+} as const;
+
+// Default exported colors object (preserves backward compatibility while carrying palette + light semantics)
+export const colors = {
+  ...palette,
+  ...lightSemanticColors,
+} as const;
+
+// Helper to get semantic color tokens for a given scheme
+export const getThemeColors = (isDark: boolean) => ({
+  ...palette,
+  ...(isDark ? darkSemanticColors : lightSemanticColors),
+});
 
 export const typography = {
   sizes: {
@@ -184,18 +225,30 @@ export const shadows = {
   },
 } as const;
 
-export const theme = {
-  colors,
+export const lightTheme = {
+  isDark: false,
+  colors: { ...palette, ...lightSemanticColors },
   typography,
   spacing,
   radii,
   shadows,
 } as const;
 
-export type Theme = typeof theme;
+export const darkTheme = {
+  isDark: true,
+  colors: { ...palette, ...darkSemanticColors },
+  typography,
+  spacing,
+  radii,
+  shadows,
+} as const;
+
+export const theme = lightTheme;
+
+export type Theme = typeof lightTheme;
 export type Colors = typeof colors;
-export type DietaryTag = keyof typeof colors.dietary;
-export type PaymentTypeKey = keyof typeof colors.payment;
-export type MacroType = keyof typeof colors.macros;
+export type DietaryTag = keyof typeof palette.dietary;
+export type PaymentTypeKey = keyof typeof palette.payment;
+export type MacroType = keyof typeof palette.macros;
 
 export default theme;
