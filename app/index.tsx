@@ -8,6 +8,7 @@ import {
 } from 'react-native';
 import {
   Flame,
+  RotateCcw,
   Search,
   Sparkles,
   Utensils,
@@ -24,28 +25,47 @@ import {
   SwipeableCard,
 } from '@/src/components/ui';
 import { colors, radii, spacing, typography } from '@/src/constants/theme';
+import { useDiningStore, useMealPlanStore, useUserStore } from '@/src/store';
 
 export default function HomeScreen() {
-  const [searchQuery, setSearchQuery] = useState('');
+  const { profile, resetToDemo: resetUserDemo } = useUserStore();
+  const {
+    activePlan,
+    toggleSlotLogged,
+    getLoggedTotals,
+    resetToDemoPlan,
+  } = useMealPlanStore();
+  const { searchQuery, setSearchQuery, resetFilters } = useDiningStore();
+
   const [buttonLoading, setButtonLoading] = useState(false);
-  const [loggedCalories, setLoggedCalories] = useState(1850);
+  const loggedTotals = getLoggedTotals();
 
   const handleToggleLog = () => {
     setButtonLoading(true);
     setTimeout(() => {
+      if (!activePlan.meals.dinner.isLogged) {
+        toggleSlotLogged('dinner');
+      } else {
+        toggleSlotLogged('snack');
+      }
       setButtonLoading(false);
-      setLoggedCalories((prev) => (prev >= 2400 ? 1850 : prev + 250));
-    }, 400);
+    }, 300);
+  };
+
+  const handleResetDemo = () => {
+    resetUserDemo();
+    resetToDemoPlan();
+    resetFilters();
   };
 
   return (
     <SafeAreaView style={styles.safeArea}>
       <Header
         title="BuckeyeGrub"
-        subtitle="Ohio State Campus Dining"
+        subtitle={`Welcome back, ${profile.name.split(' ')[0]}!`}
         rightAction={
           <Badge
-            label="5 Streak"
+            label={`${profile.streakDays} Streak`}
             variant="scarlet"
             size="sm"
             icon={<BuckeyeLeaf size={14} color={colors.scarlet} />}
@@ -58,25 +78,44 @@ export default function HomeScreen() {
         contentContainerStyle={styles.contentContainer}
         showsVerticalScrollIndicator={false}
       >
+        {/* BuckID Status Bar */}
+        <Card variant="filled" padding="sm" style={styles.balanceCard}>
+          <View style={styles.balanceRow}>
+            <Text style={styles.balanceText}>
+              Swipes: <Text style={styles.balanceHighlight}>{profile.balances.swipes}</Text>
+            </Text>
+            <Text style={styles.balanceDivider}>•</Text>
+            <Text style={styles.balanceText}>
+              Dining $: <Text style={styles.balanceHighlight}>${profile.balances.diningDollars.toFixed(2)}</Text>
+            </Text>
+            <Text style={styles.balanceDivider}>•</Text>
+            <Text style={styles.balanceText}>
+              BuckID Cash: <Text style={styles.balanceHighlight}>${profile.balances.buckidCash.toFixed(2)}</Text>
+            </Text>
+          </View>
+        </Card>
+
         {/* Banner */}
         <View style={styles.bannerContainer}>
-          <Text style={styles.bannerTitle}>OSU Design System</Text>
+          <Text style={styles.bannerTitle}>OSU Design System & State Layer</Text>
           <Text style={styles.bannerSubtitle}>
-            Atomic UI Primitives & Official Scarlet & Gray Palette
+            Zustand v5 Client State & AsyncStorage Persistence Active
           </Text>
         </View>
 
         {/* Section 1: Daily Nutrition & Macro Progress */}
         <View style={styles.sectionHeader}>
           <Text style={styles.sectionTitle}>Daily Nutrition Target</Text>
-          <Text style={styles.sectionSubtitle}>Animated SVG MacroRing & Progress Bars</Text>
+          <Text style={styles.sectionSubtitle}>
+            Animated SVG MacroRing & Progress Bars (Reactive to Store)
+          </Text>
         </View>
 
         <Card variant="elevated" padding="lg" style={styles.macroCard}>
           <View style={styles.macroOverviewRow}>
             <MacroRing
-              current={loggedCalories}
-              target={2400}
+              current={loggedTotals.calories}
+              target={profile.targetCalories}
               size={144}
               strokeWidth={12}
               color={colors.macros.calories}
@@ -87,37 +126,56 @@ export default function HomeScreen() {
             <View style={styles.macroBarsColumn}>
               <ProgressBar
                 label="Protein"
-                current={145}
-                target={180}
+                current={loggedTotals.macros.protein}
+                target={profile.targetMacros.protein}
                 unit="g"
                 color={colors.macros.protein}
               />
               <ProgressBar
                 label="Carbs"
-                current={210}
-                target={260}
+                current={loggedTotals.macros.carbs}
+                target={profile.targetMacros.carbs}
                 unit="g"
                 color={colors.macros.carbs}
               />
               <ProgressBar
                 label="Fat"
-                current={52}
-                target={70}
+                current={loggedTotals.macros.fat}
+                target={profile.targetMacros.fat}
                 unit="g"
                 color={colors.macros.fat}
               />
             </View>
           </View>
 
-          <Button
-            title="Log Quick Snack (+250 kcal)"
-            variant="outline"
-            size="sm"
-            leftIcon={<Flame size={16} color={colors.scarlet} />}
-            loading={buttonLoading}
-            onPress={handleToggleLog}
-            style={styles.quickLogButton}
-          />
+          <View style={styles.macroActionsRow}>
+            <Button
+              title={
+                !activePlan.meals.dinner.isLogged
+                  ? 'Log Dinner (+640 kcal)'
+                  : !activePlan.meals.snack.isLogged
+                  ? 'Log Snack (+570 kcal)'
+                  : 'All Meals Logged (Reset Day)'
+              }
+              variant="outline"
+              size="sm"
+              leftIcon={<Flame size={16} color={colors.scarlet} />}
+              loading={buttonLoading}
+              onPress={
+                activePlan.meals.dinner.isLogged && activePlan.meals.snack.isLogged
+                  ? handleResetDemo
+                  : handleToggleLog
+              }
+              style={styles.flexButton}
+            />
+            <Button
+              title="Reset Demo"
+              variant="secondary"
+              size="sm"
+              leftIcon={<RotateCcw size={15} color={colors.textPrimary} />}
+              onPress={handleResetDemo}
+            />
+          </View>
         </Card>
 
         {/* Section 2: Dining Hall Cards & Dietary Badges */}
@@ -315,6 +373,34 @@ const styles = StyleSheet.create({
   macroBarsColumn: {
     flex: 1,
     justifyContent: 'center',
+  },
+  macroActionsRow: {
+    flexDirection: 'row',
+    gap: spacing.sm,
+    marginTop: spacing.md,
+  },
+  balanceCard: {
+    marginBottom: spacing.md,
+    backgroundColor: colors.surfaceHover,
+  },
+  balanceRow: {
+    flexDirection: 'row',
+    justifyContent: 'center',
+    alignItems: 'center',
+    gap: spacing.sm,
+  },
+  balanceText: {
+    fontSize: typography.sizes.xs,
+    color: colors.textSecondary,
+    fontWeight: typography.weights.medium,
+  },
+  balanceHighlight: {
+    color: colors.scarlet,
+    fontWeight: typography.weights.bold,
+  },
+  balanceDivider: {
+    color: colors.gray,
+    fontSize: typography.sizes.xs,
   },
   quickLogButton: {
     marginTop: spacing.md,

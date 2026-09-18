@@ -70,23 +70,24 @@
 ---
 
 ## Checkpoint 4: State Management & Persistence Layer
-- [ ] Define TypeScript models in `src/types/user.ts` and `src/types/mealPlan.ts`.
-- [ ] Implement `src/store/useUserStore.ts`:
-  - Profile state (name, fitness goal: bulk/cut/maintain, calorie target, macro targets).
-  - BuckID balances (Traditions Swipes remaining, Dining Dollars balance).
-  - Dietary restrictions array.
-  - Pre-seeded demo user (*"Brutus the Buckeye"*).
-- [ ] Implement `src/store/useMealPlanStore.ts`:
-  - Active daily meal plan (Breakfast, Lunch, Dinner, Snack).
-  - Meal logging toggle (`isLogged`).
-  - Favorites and saved meal plans collection.
-  - Item swap action.
-- [ ] Implement `src/store/useDiningStore.ts`:
-  - Selected campus zone filter (`North` | `South` | `West` | `All`).
-  - Selected payment filter (`All` | `Traditions Swipe` | `Dining Dollars`).
-  - Search query and active dietary tags.
-- [ ] Wire all stores to `@react-native-async-storage/async-storage` for auto-persistence across app reloads.
-- **Gate 4 Acceptance Criteria**: State changes persist across browser/simulator refresh; resetting to demo state works reliably.
+- [x] Define TypeScript models in `src/types/user.ts` and `src/types/mealPlan.ts`.
+- [x] Implement `src/store/useUserStore.ts`:
+  - [x] Profile state (name, fitness goal: bulk/cut/maintain, calorie target, macro targets).
+  - [x] BuckID balances (Traditions Swipes remaining, Dining Dollars balance).
+  - [x] Dietary restrictions array.
+  - [x] Pre-seeded demo user (*"Brutus the Buckeye"*).
+- [x] Implement `src/store/useMealPlanStore.ts`:
+  - [x] Active daily meal plan (Breakfast, Lunch, Dinner, Snack).
+  - [x] Meal logging toggle (`isLogged`).
+  - [x] Favorites and saved meal plans collection.
+  - [x] Item swap action.
+- [x] Implement `src/store/useDiningStore.ts`:
+  - [x] Selected campus zone filter (`North` | `South` | `West` | `All`).
+  - [x] Selected payment filter (`All` | `Traditions Swipe` | `Dining Dollars`).
+  - [x] Search query and active dietary tags.
+- [x] Wire all stores to `@react-native-async-storage/async-storage` via cross-platform `appStorage` with Node/SSR fallback for auto-persistence across app reloads.
+- [x] Bind `app/index.tsx` showcase screen directly to `useUserStore`, `useMealPlanStore`, and `useDiningStore` with interactive demo logging and one-tap demo reset.
+- **Gate 4 Acceptance Criteria**: [PASSED] State changes persist across browser/simulator refresh; resetting to demo state works reliably; 91 automated verification assertions passed with zero TypeScript errors.
 
 ---
 

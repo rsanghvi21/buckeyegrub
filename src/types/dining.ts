@@ -3,6 +3,7 @@
  * Strict types for OSU campus dining infrastructure.
  */
 
+export type { DietaryTag } from '../constants/theme';
 import { DietaryTag } from '../constants/theme';
 
 export type CampusZone = 'North' | 'South' | 'West';
@@ -123,6 +124,42 @@ export interface DiningFilterOptions {
   maxPrice?: number;
   swipeOnly?: boolean;
 }
+
+export interface DiningStoreState {
+  selectedZone: CampusZone | 'All';
+  selectedPayment: PaymentType | 'All';
+  searchQuery: string;
+  selectedDietaryTags: DietaryTag[];
+  selectedVenueId: string | null;
+  selectedCategory: MealCategory | 'All';
+  minProtein: number | null;
+  maxCalories: number | null;
+  maxPrice: number | null;
+  swipeOnly: boolean;
+  hasHydrated: boolean;
+}
+
+export interface DiningStoreActions {
+  setZone: (zone: CampusZone | 'All') => void;
+  setPaymentType: (payment: PaymentType | 'All') => void;
+  setSearchQuery: (query: string) => void;
+  toggleDietaryTag: (tag: DietaryTag) => void;
+  setDietaryTags: (tags: DietaryTag[]) => void;
+  clearDietaryTags: () => void;
+  setSelectedVenueId: (venueId: string | null) => void;
+  setSelectedCategory: (category: MealCategory | 'All') => void;
+  setMacroConstraints: (constraints: {
+    minProtein?: number | null;
+    maxCalories?: number | null;
+    maxPrice?: number | null;
+    swipeOnly?: boolean;
+  }) => void;
+  resetFilters: () => void;
+  getFilterOptions: () => DiningFilterOptions;
+  setHasHydrated: (hydrated: boolean) => void;
+}
+
+export type DiningStore = DiningStoreState & DiningStoreActions;
 
 export type MacroSortField =
   | 'calories'
