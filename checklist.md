@@ -46,21 +46,24 @@
 ---
 
 ## Checkpoint 3: Campus Dining & Nutrislice Catalog
-- [ ] Define TypeScript types in `src/types/dining.ts` (`DiningVenue`, `MenuItem`, `CampusZone`, `PaymentType`).
-- [ ] Populate `src/data/osuVenues.ts` with 10+ OSU campus dining locations:
-  - [ ] Traditions at Scott (North Campus)
-  - [ ] Traditions at Kennedy (South Campus)
-  - [ ] Traditions at Morrill (West Campus)
-  - [ ] Curl Market (North Campus)
-  - [ ] Union Market (Ohio Union / South Campus)
-  - [ ] 12th Avenue Bread Company (South Campus)
-  - [ ] Neil Avenue Cafe (South Campus)
-  - [ ] PAD - Pizza & Delivery (North Campus)
-  - [ ] Woody's Tavern (Ohio Union)
-  - [ ] Berry Cafe (Thompson Library)
-- [ ] Populate `src/data/osuMenuItems.ts` with 50+ real campus items with accurate calories, protein, carbs, fat, fiber, price, swipe eligibility, and allergen tags.
-- [ ] Implement `src/services/nutrislice/nutrisliceClient.ts` with caching, venue filtering, macro sorting, and search.
-- **Gate 3 Acceptance Criteria**: Data layer returns accurate dining venues and menu items filtered by campus zone, payment type, or dietary restriction.
+- [x] Define TypeScript types in `src/types/dining.ts` (`DiningVenue`, `MenuItem`, `CampusZone`, `PaymentType`).
+- [x] Populate `src/data/osuVenues.ts` with 10+ OSU campus dining locations:
+  - [x] Traditions at Scott (North Campus)
+  - [x] Traditions at Kennedy (South Campus)
+  - [x] Traditions at Morrill (West Campus)
+  - [x] Curl Market (North Campus)
+  - [x] Union Market (Ohio Union / South Campus)
+  - [x] 12th Avenue Bread Company (South Campus)
+  - [x] Neil Avenue Cafe (South Campus)
+  - [x] PAD - Pizza & Delivery (North Campus)
+  - [x] Woody's Tavern (Ohio Union)
+  - [x] Berry Cafe (Thompson Library)
+- [x] Populate `src/data/osuMenuItems.ts` with 50+ real campus items with accurate calories, protein, carbs, fat, fiber, price, swipe eligibility, and allergen tags.
+- [x] Implement `src/services/nutrislice/nutrisliceClient.ts` with caching, venue filtering, macro sorting, and search.
+- **Gate 3 Acceptance Criteria**: [PASSED] Data layer returns accurate dining venues (12 venues) and menu items (63 items) filtered by campus zone, payment type, or dietary restriction; 106 automated verification assertions passed.
+- **Commit History**:
+  - `fc79a6b` (2026-09-18T13:37:40-04:00): `feat(dining): implement checkpoint 3 - campus dining and nutrislice catalog`
+  - `43d62cb` (2026-09-18T14:53:30-04:00): `fix(dining): remediate code review findings for Checkpoint 3`
 
 ---
 
