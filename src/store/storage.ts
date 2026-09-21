@@ -10,13 +10,8 @@ import { StateStorage } from 'zustand/middleware';
 // In-memory fallback map for non-browser / headless Node.js environments
 const memoryStorage = new Map<string, string>();
 
-const isNodeOrSSR = typeof window === 'undefined' && typeof navigator === 'undefined';
-
 export const appStorage: StateStorage = {
   getItem: async (name: string): Promise<string | null> => {
-    if (isNodeOrSSR) {
-      return memoryStorage.get(name) ?? null;
-    }
     try {
       return await AsyncStorage.getItem(name);
     } catch {
@@ -25,10 +20,6 @@ export const appStorage: StateStorage = {
   },
 
   setItem: async (name: string, value: string): Promise<void> => {
-    if (isNodeOrSSR) {
-      memoryStorage.set(name, value);
-      return;
-    }
     try {
       await AsyncStorage.setItem(name, value);
     } catch {
@@ -37,10 +28,6 @@ export const appStorage: StateStorage = {
   },
 
   removeItem: async (name: string): Promise<void> => {
-    if (isNodeOrSSR) {
-      memoryStorage.delete(name);
-      return;
-    }
     try {
       await AsyncStorage.removeItem(name);
     } catch {
@@ -63,10 +50,8 @@ export async function clearAllPersistedState(): Promise<void> {
   memoryStorage.clear();
   try {
     const keys = Object.values(STORAGE_KEYS);
-    if (!isNodeOrSSR) {
-      await AsyncStorage.multiRemove(keys);
-    }
+    await AsyncStorage.multiRemove(keys);
   } catch {
-    // Graceful swallow during headless runs
+    // Graceful swallow during headless runs or when AsyncStorage is unavailable
   }
 }

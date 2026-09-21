@@ -112,6 +112,20 @@ export function calculateDiningDollarDiscount(retailPrice: number): number {
   return Math.round(retailPrice * 0.65 * 100) / 100;
 }
 
+export interface NutritionTotals {
+  calories: number;
+  macros: MacroNutrients;
+}
+
+export type PaymentFilterType =
+  | 'All'
+  | 'swipe'
+  | 'dining_dollars'
+  | 'buckid_cash'
+  | 'Traditions Swipe'
+  | 'Dining Dollars'
+  | 'BuckID Cash';
+
 export interface DiningFilterOptions {
   zone?: CampusZone | 'All';
   paymentType?: PaymentType | 'All';

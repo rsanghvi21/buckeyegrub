@@ -88,6 +88,9 @@
 - [x] Wire all stores to `@react-native-async-storage/async-storage` via cross-platform `appStorage` with Node/SSR fallback for auto-persistence across app reloads.
 - [x] Bind `app/index.tsx` showcase screen directly to `useUserStore`, `useMealPlanStore`, and `useDiningStore` with interactive demo logging and one-tap demo reset.
 - **Gate 4 Acceptance Criteria**: [PASSED] State changes persist across browser/simulator refresh; resetting to demo state works reliably; 91 automated verification assertions passed with zero TypeScript errors.
+- **Commit History**:
+  - `6273856` (2026-09-18T16:46:36-04:00): `feat(store): implement checkpoint 4 - state management & persistence layer`
+  - `a525fd0` (2026-09-21T10:34:56-04:00): `fix(store): reconcile dining store types and storage fallback`
 
 ---
 
