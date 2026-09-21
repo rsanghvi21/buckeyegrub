@@ -70,40 +70,49 @@
 ---
 
 ## Checkpoint 4: State Management & Persistence Layer
-- [ ] Define TypeScript models in `src/types/user.ts` and `src/types/mealPlan.ts`.
-- [ ] Implement `src/store/useUserStore.ts`:
-  - Profile state (name, fitness goal: bulk/cut/maintain, calorie target, macro targets).
-  - BuckID balances (Traditions Swipes remaining, Dining Dollars balance).
-  - Dietary restrictions array.
-  - Pre-seeded demo user (*"Brutus the Buckeye"*).
-- [ ] Implement `src/store/useMealPlanStore.ts`:
-  - Active daily meal plan (Breakfast, Lunch, Dinner, Snack).
-  - Meal logging toggle (`isLogged`).
-  - Favorites and saved meal plans collection.
-  - Item swap action.
-- [ ] Implement `src/store/useDiningStore.ts`:
-  - Selected campus zone filter (`North` | `South` | `West` | `All`).
-  - Selected payment filter (`All` | `Traditions Swipe` | `Dining Dollars`).
-  - Search query and active dietary tags.
-- [ ] Wire all stores to `@react-native-async-storage/async-storage` for auto-persistence across app reloads.
-- **Gate 4 Acceptance Criteria**: State changes persist across browser/simulator refresh; resetting to demo state works reliably.
+- [x] Define TypeScript models in `src/types/user.ts` and `src/types/mealPlan.ts`.
+- [x] Implement `src/store/useUserStore.ts`:
+  - [x] Profile state (name, fitness goal: bulk/cut/maintain, calorie target, macro targets).
+  - [x] BuckID balances (Traditions Swipes remaining, Dining Dollars balance).
+  - [x] Dietary restrictions array.
+  - [x] Pre-seeded demo user (*"Brutus the Buckeye"*).
+- [x] Implement `src/store/useMealPlanStore.ts`:
+  - [x] Active daily meal plan (Breakfast, Lunch, Dinner, Snack).
+  - [x] Meal logging toggle (`isLogged`).
+  - [x] Favorites and saved meal plans collection.
+  - [x] Item swap action.
+- [x] Implement `src/store/useDiningStore.ts`:
+  - [x] Selected campus zone filter (`North` | `South` | `West` | `All`).
+  - [x] Selected payment filter (`All` | `Traditions Swipe` | `Dining Dollars`).
+  - [x] Search query and active dietary tags.
+- [x] Wire all stores to `@react-native-async-storage/async-storage` via cross-platform `appStorage` with Node/SSR fallback for auto-persistence across app reloads.
+- [x] Bind `app/index.tsx` showcase screen directly to `useUserStore`, `useMealPlanStore`, and `useDiningStore` with interactive demo logging and one-tap demo reset.
+- **Gate 4 Acceptance Criteria**: [PASSED] State changes persist across browser/simulator refresh; resetting to demo state works reliably; 91 automated verification assertions passed with zero TypeScript errors.
+- **Commit History**:
+  - `6273856` (2026-09-18T16:46:36-04:00): `feat(store): implement checkpoint 4 - state management & persistence layer`
+  - `a525fd0` (2026-09-21T10:34:56-04:00): `fix(store): reconcile dining store types and storage fallback`
 
 ---
 
 ## Checkpoint 5: BrutusAI Engine (Gemini & Heuristic Fallback)
-- [ ] Implement `src/services/ai/prompts.ts`:
-  - Brutus Buckeye persona system prompt.
-  - Campus knowledge grounding (gyms: RPAC, North Rec; libraries: Thompson, 18th Ave).
-  - Strict JSON schema for daily meal plan output.
-- [ ] Implement `src/services/ai/heuristicPlanner.ts`:
-  - Constraint-satisfaction algorithm that calculates a 4-meal plan matching user's calorie and protein goals within ±5% using real OSU dining items.
-  - Works 100% offline with zero API keys required.
-- [ ] Implement `src/services/ai/brutusAI.ts`:
-  - Connects to Google Gemini API (with support for OpenAI key toggle).
-  - Handles streaming chat interactions and 1-Click meal plan generation.
-  - Seamlessly falls back to heuristic planner if offline or API key is missing.
-- [ ] Implement `src/store/useChatStore.ts` for conversational history with Brutus.
-- **Gate 5 Acceptance Criteria**: 1-Click "Plan My Day" produces balanced 4-meal plan using real campus items; chat responds in Brutus's persona.
+- [x] Implement `src/services/ai/prompts.ts`:
+  - [x] Brutus Buckeye persona system prompt.
+  - [x] Campus knowledge grounding (gyms: RPAC, North Rec; libraries: Thompson, 18th Ave).
+  - [x] Strict JSON schema for daily meal plan output.
+- [x] Implement `src/services/ai/heuristicPlanner.ts`:
+  - [x] Constraint-satisfaction algorithm that calculates a 4-meal plan matching user's calorie and protein goals within ±5% using real OSU dining items.
+  - [x] Works 100% offline with zero API keys required.
+- [x] Implement `src/services/ai/brutusAI.ts`:
+  - [x] Connects to Google Gemini API (with support for OpenAI key toggle).
+  - [x] Handles streaming chat interactions and 1-Click meal plan generation.
+  - [x] Seamlessly falls back to heuristic planner if offline or API key is missing.
+- [x] Implement `src/services/ai/grubhubAssistant.ts`:
+  - [x] Generates human-readable meal customization copy for Grubhub order notes.
+- [x] Implement `src/store/useChatStore.ts` for conversational history with Brutus (streaming tokens & fallback notification observability).
+- **Gate 5 Acceptance Criteria**: [PASSED] 1-Click "Plan My Day" produces balanced 4-meal plan using real campus items (±5% calorie and protein adherence across athletic, cut, bulk, vegan, and gluten-free profiles); chat responds in Brutus's persona with streaming support; zero-crash fallback with UI alert observability; automated verification assertions passed with zero TypeScript errors.
+- **Commit History**:
+  - `8409b4f` (2026-09-21T10:53:33-04:00): `feat(ai): implement checkpoint 5 - brutusAI engine (gemini & heuristic fallback)`
+  - `a60fce9` (2026-09-21T11:49:57-04:00): `fix(ai): remediate code review findings for Checkpoint 5 (standards & spec)`
 
 ---
 

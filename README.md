@@ -155,7 +155,7 @@ Project execution follows the master roadmap outlined in [`checklist.md`](checkl
 - [x] **Checkpoint 1: Project Scaffolding & Tooling Setup** (Expo Router, TypeScript, Reanimated, Metro web export)
 - [x] **Checkpoint 2: OSU Design System & Component Library** (Scarlet & Grey palette, MacroRing, ProgressBar)
 - [x] **Checkpoint 3: Campus Dining & Nutrislice Catalog** (Live API client, 10+ OSU venues, macro normalizer)
-- [ ] **Checkpoint 4: State Management & Persistence Layer** (Zustand + AsyncStorage with demo profile)
+- [x] **Checkpoint 4: State Management & Persistence Layer** (Zustand + AsyncStorage with demo profile)
 - [ ] **Checkpoint 5: BrutusAI Engine** (Gemini integration + offline heuristic planner)
 - [ ] **Checkpoint 6: Grubhub Deep-Link & Order Assistant Modal**
 - [ ] **Checkpoint 7: Core Screens & User Experience** (Dashboard, AI Planner, Menus, Saved, Profile)
