@@ -95,19 +95,21 @@
 ---
 
 ## Checkpoint 5: BrutusAI Engine (Gemini & Heuristic Fallback)
-- [ ] Implement `src/services/ai/prompts.ts`:
-  - Brutus Buckeye persona system prompt.
-  - Campus knowledge grounding (gyms: RPAC, North Rec; libraries: Thompson, 18th Ave).
-  - Strict JSON schema for daily meal plan output.
-- [ ] Implement `src/services/ai/heuristicPlanner.ts`:
-  - Constraint-satisfaction algorithm that calculates a 4-meal plan matching user's calorie and protein goals within ±5% using real OSU dining items.
-  - Works 100% offline with zero API keys required.
-- [ ] Implement `src/services/ai/brutusAI.ts`:
-  - Connects to Google Gemini API (with support for OpenAI key toggle).
-  - Handles streaming chat interactions and 1-Click meal plan generation.
-  - Seamlessly falls back to heuristic planner if offline or API key is missing.
-- [ ] Implement `src/store/useChatStore.ts` for conversational history with Brutus.
-- **Gate 5 Acceptance Criteria**: 1-Click "Plan My Day" produces balanced 4-meal plan using real campus items; chat responds in Brutus's persona.
+- [x] Implement `src/services/ai/prompts.ts`:
+  - [x] Brutus Buckeye persona system prompt.
+  - [x] Campus knowledge grounding (gyms: RPAC, North Rec; libraries: Thompson, 18th Ave).
+  - [x] Strict JSON schema for daily meal plan output.
+- [x] Implement `src/services/ai/heuristicPlanner.ts`:
+  - [x] Constraint-satisfaction algorithm that calculates a 4-meal plan matching user's calorie and protein goals within ±5% using real OSU dining items.
+  - [x] Works 100% offline with zero API keys required.
+- [x] Implement `src/services/ai/brutusAI.ts`:
+  - [x] Connects to Google Gemini API (with support for OpenAI key toggle).
+  - [x] Handles streaming chat interactions and 1-Click meal plan generation.
+  - [x] Seamlessly falls back to heuristic planner if offline or API key is missing.
+- [x] Implement `src/store/useChatStore.ts` for conversational history with Brutus.
+- **Gate 5 Acceptance Criteria**: [PASSED] 1-Click "Plan My Day" produces balanced 4-meal plan using real campus items (±5% calorie adherence across athletic, cut, bulk, vegan, and gluten-free profiles); chat responds in Brutus's persona; 50 automated verification assertions passed with zero TypeScript errors.
+- **Commit History**:
+  - `8409b4f` (2026-09-21T10:53:33-04:00): `feat(ai): implement checkpoint 5 - brutusAI engine (gemini & heuristic fallback)`
 
 ---
 
