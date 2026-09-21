@@ -40,6 +40,7 @@ export const STORAGE_KEYS = {
   USER: 'buckeyegrub_user_v1',
   MEAL_PLAN: 'buckeyegrub_mealplan_v1',
   DINING: 'buckeyegrub_dining_v1',
+  CHAT: 'buckeyegrub_chat_v1',
 } as const;
 
 /**

@@ -7,3 +7,4 @@ export * from './storage';
 export * from './useUserStore';
 export * from './useMealPlanStore';
 export * from './useDiningStore';
+export * from './useChatStore';
