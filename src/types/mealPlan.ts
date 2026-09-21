@@ -24,6 +24,54 @@ export interface MealSlot {
   isLogged: boolean;
 }
 
+export const DEFAULT_MEAL_SLOT_RATIOS: Record<MealSlotType, number> = {
+  breakfast: 0.25,
+  lunch: 0.35,
+  dinner: 0.30,
+  snack: 0.10,
+} as const;
+
+/**
+ * Calculates sum of calories and macros across an array of planned items.
+ * Centralized shared helper to ensure identical precision across store and planner layers.
+ */
+export function calculatePlannedItemsTotals(items: PlannedMealItem[]): {
+  calories: number;
+  macros: MacroNutrients;
+} {
+  let calories = 0;
+  let protein = 0;
+  let carbs = 0;
+  let fat = 0;
+  let fiber = 0;
+  let sugar = 0;
+  let sodium = 0;
+
+  for (const entry of items) {
+    const mult = entry.servingMultiplier > 0 ? entry.servingMultiplier : 1;
+    const item = entry.menuItem;
+    calories += item.calories * mult;
+    protein += item.macros.protein * mult;
+    carbs += item.macros.carbs * mult;
+    fat += item.macros.fat * mult;
+    fiber += (item.macros.fiber ?? 0) * mult;
+    sugar += (item.macros.sugar ?? 0) * mult;
+    sodium += (item.macros.sodium ?? 0) * mult;
+  }
+
+  return {
+    calories: Math.round(calories),
+    macros: {
+      protein: Math.round(protein * 10) / 10,
+      carbs: Math.round(carbs * 10) / 10,
+      fat: Math.round(fat * 10) / 10,
+      fiber: Math.round(fiber * 10) / 10,
+      sugar: Math.round(sugar * 10) / 10,
+      sodium: Math.round(sodium),
+    },
+  };
+}
+
 export interface DailyMealPlan {
   id: string;
   date: string; // YYYY-MM-DD
@@ -33,6 +81,8 @@ export interface DailyMealPlan {
   targetMacros: MacroTargets;
   totalCalories: number;
   totalMacros: MacroNutrients;
+  source?: 'gemini' | 'openai' | 'heuristic';
+  fallbackReason?: string;
   createdAt: string;
   updatedAt: string;
 }

@@ -27,6 +27,11 @@ import {
   generateLocalConversationalReply,
   MEAL_PLAN_JSON_SYSTEM_PROMPT,
 } from '../prompts';
+import {
+  generateGrubhubCustomizationCopy,
+  generateItemCustomizationCopy,
+  generateMealPlanGrubhubSummary,
+} from '../grubhubAssistant';
 
 interface TestResult {
   name: string;
@@ -155,9 +160,14 @@ async function runAllTests(): Promise<void> {
     athleticCalError <= 5.0,
     `Athletic plan calories (${athleticPlan.totalCalories} kcal) within ±5% of 2,400 kcal (Error: ${athleticCalError.toFixed(2)}%)`
   );
+  const athleticProtError = Math.abs(athleticPlan.totalMacros.protein - 180) / 180 * 100;
   assert(
-    athleticPlan.totalMacros.protein >= 150,
-    `Athletic plan protein (${athleticPlan.totalMacros.protein}g) provides high protein support`
+    athleticProtError <= 5.0,
+    `Athletic plan protein (${athleticPlan.totalMacros.protein}g) within ±5% of 180g target (Error: ${athleticProtError.toFixed(2)}%)`
+  );
+  assert(
+    athleticPlan.source === 'heuristic',
+    'Athletic plan records heuristic source metadata'
   );
 
   // Verify all items are genuine items in OSU catalog
@@ -189,6 +199,11 @@ async function runAllTests(): Promise<void> {
     cutCalError <= 5.0,
     `Cut plan calories (${cutPlan.totalCalories} kcal) within ±5% of 1,800 kcal (Error: ${cutCalError.toFixed(2)}%)`
   );
+  const cutProtError = Math.abs(cutPlan.totalMacros.protein - 160) / 160 * 100;
+  assert(
+    cutProtError <= 5.0,
+    `Cut plan protein (${cutPlan.totalMacros.protein}g) within ±5% of 160g target (Error: ${cutProtError.toFixed(2)}%)`
+  );
 
   // Test Profile 3: Bulk Profile (3,000 kcal, 200g protein)
   const bulkProfile: UserProfile = {
@@ -202,6 +217,11 @@ async function runAllTests(): Promise<void> {
   assert(
     bulkCalError <= 5.0,
     `Bulk plan calories (${bulkPlan.totalCalories} kcal) within ±5% of 3,000 kcal (Error: ${bulkCalError.toFixed(2)}%)`
+  );
+  const bulkProtError = Math.abs(bulkPlan.totalMacros.protein - 200) / 200 * 100;
+  assert(
+    bulkProtError <= 5.0,
+    `Bulk plan protein (${bulkPlan.totalMacros.protein}g) within ±5% of 200g target (Error: ${bulkProtError.toFixed(2)}%)`
   );
 
   // =========================================================================
@@ -299,6 +319,29 @@ async function runAllTests(): Promise<void> {
     !!invalidKeyPlan && invalidKeyPlan.totalCalories > 0,
     'generateDailyMealPlan gracefully falls back to heuristic planner when API key is invalid'
   );
+  assert(
+    invalidKeyPlan.source === 'heuristic',
+    'Invalid API key fallback records plan source as heuristic'
+  );
+
+  // Generate plan with OpenAI toggle & dummy key
+  const openAiPlan = await brutusAI.generateDailyMealPlan({
+    ...demoProfile,
+    preferences: { ...demoProfile.preferences, aiProvider: 'openai' },
+    openaiApiKey: 'invalid_openai_key_test',
+  });
+  assert(
+    !!openAiPlan && openAiPlan.totalCalories > 0,
+    'generateDailyMealPlan gracefully handles OpenAI provider toggle & fallback'
+  );
+  assert(
+    openAiPlan.source === 'heuristic',
+    'OpenAI fallback sets plan source to heuristic'
+  );
+  assert(
+    !!openAiPlan.fallbackReason,
+    'OpenAI fallback records descriptive fallbackReason'
+  );
 
   // Chat without API key
   const chatReply = await brutusAI.chatWithBrutus(
@@ -312,6 +355,41 @@ async function runAllTests(): Promise<void> {
   assert(
     chatReply.length > 0 && (chatReply.includes('Scott') || chatReply.includes('protein') || chatReply.includes('O-H')),
     'chatWithBrutus returns campus-grounded response offline'
+  );
+
+  // Streaming chat with Brutus
+  const streamedTokens: string[] = [];
+  const streamResult = await brutusAI.streamChatWithBrutus(
+    'Quick snack recommendation?',
+    [],
+    demoProfile,
+    (token) => streamedTokens.push(token)
+  );
+  assert(streamedTokens.length > 0, 'streamChatWithBrutus emits tokens incrementally to callback');
+  assert(
+    streamResult.reply.length > 0,
+    'streamChatWithBrutus returns complete response'
+  );
+  assert(
+    streamedTokens.join('').trim() === streamResult.reply.trim(),
+    'Streamed token concatenation accurately reconstructs reply'
+  );
+
+  // Grubhub Order Assistant Copy Generation
+  const lunchCopy = generateGrubhubCustomizationCopy(athleticPlan.meals.lunch, 'Traditions at Scott');
+  assert(
+    lunchCopy.includes('Traditions at Scott Order (Lunch):') && lunchCopy.includes('Nutrition:'),
+    'generateGrubhubCustomizationCopy produces structured order header and nutrition'
+  );
+  const itemCopy = generateItemCustomizationCopy(athleticPlan.meals.lunch.items[0]);
+  assert(
+    itemCopy.includes(athleticPlan.meals.lunch.items[0].menuItem.name),
+    'generateItemCustomizationCopy includes item name and portion'
+  );
+  const planSummary = generateMealPlanGrubhubSummary(athleticPlan);
+  assert(
+    !!planSummary.breakfast && !!planSummary.lunch && !!planSummary.dinner && !!planSummary.snack,
+    'generateMealPlanGrubhubSummary produces copy across all 4 meal slots'
   );
 
   // =========================================================================
@@ -352,6 +430,29 @@ async function runAllTests(): Promise<void> {
     afterSendMessages[2].role === 'assistant' && afterSendMessages[2].content.length > 0,
     'Assistant response stored correctly'
   );
+
+  // Send streaming message through store
+  await useChatStore.getState().sendMessageStreaming('Need energy before my exam');
+  const chatAfterStreaming = useChatStore.getState().messages;
+  const streamAsstMsg = chatAfterStreaming[chatAfterStreaming.length - 1];
+  assert(
+    streamAsstMsg.role === 'assistant' && streamAsstMsg.content.length > 0,
+    'sendMessageStreaming updates assistant message content in store'
+  );
+
+  // Fallback notification observability test
+  useUserStore.getState().updateProfile({ geminiApiKey: 'invalid_key_for_notice_test' });
+  await useChatStore.getState().sendMessage('Hello Brutus with bad key');
+  assert(
+    useChatStore.getState().fallbackNotice !== null,
+    'useChatStore records fallbackNotice when API call fails for UI alert banner'
+  );
+  useChatStore.getState().clearFallbackNotice();
+  assert(
+    useChatStore.getState().fallbackNotice === null,
+    'clearFallbackNotice resets notice to null'
+  );
+  useUserStore.getState().updateProfile({ geminiApiKey: undefined });
 
   // 1-Click "Plan My Day" through store
   const generatedPlan = await useChatStore.getState().generateDayPlan({ goalPreset: 'post_rpac' });

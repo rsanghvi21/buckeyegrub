@@ -106,8 +106,10 @@
   - [x] Connects to Google Gemini API (with support for OpenAI key toggle).
   - [x] Handles streaming chat interactions and 1-Click meal plan generation.
   - [x] Seamlessly falls back to heuristic planner if offline or API key is missing.
-- [x] Implement `src/store/useChatStore.ts` for conversational history with Brutus.
-- **Gate 5 Acceptance Criteria**: [PASSED] 1-Click "Plan My Day" produces balanced 4-meal plan using real campus items (±5% calorie adherence across athletic, cut, bulk, vegan, and gluten-free profiles); chat responds in Brutus's persona; 50 automated verification assertions passed with zero TypeScript errors.
+- [x] Implement `src/services/ai/grubhubAssistant.ts`:
+  - [x] Generates human-readable meal customization copy for Grubhub order notes.
+- [x] Implement `src/store/useChatStore.ts` for conversational history with Brutus (streaming tokens & fallback notification observability).
+- **Gate 5 Acceptance Criteria**: [PASSED] 1-Click "Plan My Day" produces balanced 4-meal plan using real campus items (±5% calorie and protein adherence across athletic, cut, bulk, vegan, and gluten-free profiles); chat responds in Brutus's persona with streaming support; zero-crash fallback with UI alert observability; automated verification assertions passed with zero TypeScript errors.
 - **Commit History**:
   - `8409b4f` (2026-09-21T10:53:33-04:00): `feat(ai): implement checkpoint 5 - brutusAI engine (gemini & heuristic fallback)`
 

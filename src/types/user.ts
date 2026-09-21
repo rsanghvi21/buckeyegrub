@@ -25,6 +25,7 @@ export interface UserPreferences {
   enableHaptics?: boolean;
   enableNotifications?: boolean;
   defaultCampusZone?: 'North' | 'South' | 'West' | 'All';
+  aiProvider?: 'gemini' | 'openai';
 }
 
 export interface UserProfile {

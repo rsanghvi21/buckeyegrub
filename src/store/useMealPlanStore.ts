@@ -18,48 +18,15 @@ import {
   MenuItem,
   PlannedMealItem,
   SavedMealPlan,
+  calculatePlannedItemsTotals,
 } from '../types';
 import { appStorage, STORAGE_KEYS } from './storage';
 
 /**
  * Calculates sum of calories and macros across an array of planned items.
+ * Uses centralized calculation helper from types/mealPlan.
  */
-function calculateItemsTotals(items: PlannedMealItem[]): {
-  calories: number;
-  macros: MacroNutrients;
-} {
-  let calories = 0;
-  let protein = 0;
-  let carbs = 0;
-  let fat = 0;
-  let fiber = 0;
-  let sugar = 0;
-  let sodium = 0;
-
-  for (const entry of items) {
-    const mult = entry.servingMultiplier > 0 ? entry.servingMultiplier : 1;
-    const item = entry.menuItem;
-    calories += item.calories * mult;
-    protein += item.macros.protein * mult;
-    carbs += item.macros.carbs * mult;
-    fat += item.macros.fat * mult;
-    fiber += (item.macros.fiber ?? 0) * mult;
-    sugar += (item.macros.sugar ?? 0) * mult;
-    sodium += (item.macros.sodium ?? 0) * mult;
-  }
-
-  return {
-    calories: Math.round(calories),
-    macros: {
-      protein: Math.round(protein * 10) / 10,
-      carbs: Math.round(carbs * 10) / 10,
-      fat: Math.round(fat * 10) / 10,
-      fiber: Math.round(fiber * 10) / 10,
-      sugar: Math.round(sugar * 10) / 10,
-      sodium: Math.round(sodium),
-    },
-  };
-}
+const calculateItemsTotals = calculatePlannedItemsTotals;
 
 /**
  * Calculates total daily calories and macros across all 4 meal slots.

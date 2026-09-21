@@ -14,7 +14,9 @@ import {
   MenuItem,
 } from '../../types/dining';
 import {
+  calculatePlannedItemsTotals,
   DailyMealPlan,
+  DEFAULT_MEAL_SLOT_RATIOS,
   MealSlot,
   MealSlotType,
   PlannedMealItem,
@@ -30,44 +32,9 @@ interface SlotCandidate {
 }
 
 /**
- * Calculates sum of calories and macros for an array of planned items.
+ * Re-export centralized shared calculation helper for backwards compatibility.
  */
-export function aggregatePlannedItemsTotals(items: PlannedMealItem[]): {
-  calories: number;
-  macros: MacroNutrients;
-} {
-  let calories = 0;
-  let protein = 0;
-  let carbs = 0;
-  let fat = 0;
-  let fiber = 0;
-  let sugar = 0;
-  let sodium = 0;
-
-  for (const entry of items) {
-    const mult = entry.servingMultiplier > 0 ? entry.servingMultiplier : 1;
-    const m = entry.menuItem;
-    calories += m.calories * mult;
-    protein += m.macros.protein * mult;
-    carbs += m.macros.carbs * mult;
-    fat += m.macros.fat * mult;
-    fiber += (m.macros.fiber ?? 0) * mult;
-    sugar += (m.macros.sugar ?? 0) * mult;
-    sodium += (m.macros.sodium ?? 0) * mult;
-  }
-
-  return {
-    calories: Math.round(calories),
-    macros: {
-      protein: Math.round(protein * 10) / 10,
-      carbs: Math.round(carbs * 10) / 10,
-      fat: Math.round(fat * 10) / 10,
-      fiber: Math.round(fiber * 10) / 10,
-      sugar: Math.round(sugar * 10) / 10,
-      sodium: Math.round(sodium),
-    },
-  };
-}
+export const aggregatePlannedItemsTotals = calculatePlannedItemsTotals;
 
 export class HeuristicPlanner {
   /**
@@ -132,67 +99,176 @@ export class HeuristicPlanner {
     );
 
     // Ensure no pool is empty
-    const bPool = breakfastItems.length > 0 ? breakfastItems : eligibleItems;
-    const lPool = lunchItems.length > 0 ? lunchItems : eligibleItems;
-    const dPool = dinnerItems.length > 0 ? dinnerItems : eligibleItems;
-    const sPool = snackItems.length > 0 ? snackItems : eligibleItems;
+    const breakfastPool = breakfastItems.length > 0 ? breakfastItems : eligibleItems;
+    const lunchPool = lunchItems.length > 0 ? lunchItems : eligibleItems;
+    const dinnerPool = dinnerItems.length > 0 ? dinnerItems : eligibleItems;
+    const snackPool = snackItems.length > 0 ? snackItems : eligibleItems;
 
     // 3. Build candidate combinations per slot with realistic portion scaling
     // Standard target proportions: Breakfast 25%, Lunch 35%, Dinner 30%, Snack 10%
-    const breakfastCandidates = this.buildSlotCandidates(bPool, targetCalories * 0.25, false, preferredZone);
-    const lunchCandidates = this.buildSlotCandidates(lPool, targetCalories * 0.35, true, preferredZone);
-    const dinnerCandidates = this.buildSlotCandidates(dPool, targetCalories * 0.30, true, preferredZone);
-    const snackCandidates = this.buildSlotCandidates(sPool, targetCalories * 0.10, false, preferredZone);
+    const breakfastCandidates = this.buildSlotCandidates(
+      breakfastPool,
+      targetCalories * DEFAULT_MEAL_SLOT_RATIOS.breakfast,
+      targetProtein * DEFAULT_MEAL_SLOT_RATIOS.breakfast,
+      false,
+      preferredZone
+    );
+    const lunchCandidates = this.buildSlotCandidates(
+      lunchPool,
+      targetCalories * DEFAULT_MEAL_SLOT_RATIOS.lunch,
+      targetProtein * DEFAULT_MEAL_SLOT_RATIOS.lunch,
+      true,
+      preferredZone
+    );
+    const dinnerCandidates = this.buildSlotCandidates(
+      dinnerPool,
+      targetCalories * DEFAULT_MEAL_SLOT_RATIOS.dinner,
+      targetProtein * DEFAULT_MEAL_SLOT_RATIOS.dinner,
+      true,
+      preferredZone
+    );
+    const snackCandidates = this.buildSlotCandidates(
+      snackPool,
+      targetCalories * DEFAULT_MEAL_SLOT_RATIOS.snack,
+      targetProtein * DEFAULT_MEAL_SLOT_RATIOS.snack,
+      false,
+      preferredZone
+    );
 
     // 4. Constraint search for optimal 4-slot combination
     let bestCombo: {
-      b: SlotCandidate;
-      l: SlotCandidate;
-      d: SlotCandidate;
-      s: SlotCandidate;
-      errorPct: number;
+      breakfastCandidate: SlotCandidate;
+      lunchCandidate: SlotCandidate;
+      dinnerCandidate: SlotCandidate;
+      snackCandidate: SlotCandidate;
+      calorieErrorPct: number;
+      proteinErrorPct: number;
       score: number;
     } | null = null;
 
-    for (const b of breakfastCandidates) {
-      for (const l of lunchCandidates) {
-        for (const d of dinnerCandidates) {
-          for (const s of snackCandidates) {
-            const comboCalories = b.calories + l.calories + d.calories + s.calories;
-            const errorPct = Math.abs(comboCalories - targetCalories) / targetCalories * 100;
-            const comboProtein = b.macros.protein + l.macros.protein + d.macros.protein + s.macros.protein;
+    for (const breakfastCandidate of breakfastCandidates) {
+      for (const lunchCandidate of lunchCandidates) {
+        for (const dinnerCandidate of dinnerCandidates) {
+          for (const snackCandidate of snackCandidates) {
+            const comboCalories =
+              breakfastCandidate.calories +
+              lunchCandidate.calories +
+              dinnerCandidate.calories +
+              snackCandidate.calories;
+            const calorieErrorPct = Math.abs(comboCalories - targetCalories) / targetCalories * 100;
+
+            const comboProtein =
+              breakfastCandidate.macros.protein +
+              lunchCandidate.macros.protein +
+              dinnerCandidate.macros.protein +
+              snackCandidate.macros.protein;
+            const proteinErrorPct = Math.abs(comboProtein - targetProtein) / targetProtein * 100;
+
+            const isDualWithin5 = calorieErrorPct <= 5.0 && proteinErrorPct <= 5.0;
+            const isCalorieWithin5 = calorieErrorPct <= 5.0;
 
             // Multi-objective penalty score
-            const calorieScore = errorPct * 2.0;
-            const proteinDeficit = Math.max(0, targetProtein - comboProtein) / targetProtein * 50;
-            const uniqueVenues = new Set([...b.venueIds, ...l.venueIds, ...d.venueIds, ...s.venueIds]).size;
+            const calorieScore = calorieErrorPct * 2.0;
+            const proteinScore = proteinErrorPct * 1.5;
+            const uniqueVenues = new Set([
+              ...breakfastCandidate.venueIds,
+              ...lunchCandidate.venueIds,
+              ...dinnerCandidate.venueIds,
+              ...snackCandidate.venueIds,
+            ]).size;
             const venueVarietyBonus = uniqueVenues * 3;
 
             let zoneBonus = 0;
             if (preferredZone) {
-              const allVenues = [...b.venueIds, ...l.venueIds, ...d.venueIds, ...s.venueIds];
-              const zoneMatches = allVenues.filter((vId) => OSU_VENUES_MAP[vId]?.zone === preferredZone).length;
+              const allVenues = [
+                ...breakfastCandidate.venueIds,
+                ...lunchCandidate.venueIds,
+                ...dinnerCandidate.venueIds,
+                ...snackCandidate.venueIds,
+              ];
+              const zoneMatches = allVenues.filter(
+                (vId) => OSU_VENUES_MAP[vId]?.zone === preferredZone
+              ).length;
               zoneBonus = zoneMatches * 25;
             }
 
-            const totalScore = calorieScore + proteinDeficit - venueVarietyBonus - zoneBonus;
+            const totalScore = calorieScore + proteinScore - venueVarietyBonus - zoneBonus;
 
             if (!bestCombo) {
-              bestCombo = { b, l, d, s, errorPct, score: totalScore };
+              bestCombo = {
+                breakfastCandidate,
+                lunchCandidate,
+                dinnerCandidate,
+                snackCandidate,
+                calorieErrorPct,
+                proteinErrorPct,
+                score: totalScore,
+              };
             } else {
-              // Prioritize landing within ±5%
-              const currentWithin5 = bestCombo.errorPct <= 5.0;
-              const newWithin5 = errorPct <= 5.0;
+              const currentDualWithin5 =
+                bestCombo.calorieErrorPct <= 5.0 && bestCombo.proteinErrorPct <= 5.0;
+              const currentCalorieWithin5 = bestCombo.calorieErrorPct <= 5.0;
 
-              if (newWithin5 && !currentWithin5) {
-                bestCombo = { b, l, d, s, errorPct, score: totalScore };
-              } else if (newWithin5 && currentWithin5) {
+              if (isDualWithin5 && !currentDualWithin5) {
+                bestCombo = {
+                  breakfastCandidate,
+                  lunchCandidate,
+                  dinnerCandidate,
+                  snackCandidate,
+                  calorieErrorPct,
+                  proteinErrorPct,
+                  score: totalScore,
+                };
+              } else if (isDualWithin5 && currentDualWithin5) {
                 if (totalScore < bestCombo.score) {
-                  bestCombo = { b, l, d, s, errorPct, score: totalScore };
+                  bestCombo = {
+                    breakfastCandidate,
+                    lunchCandidate,
+                    dinnerCandidate,
+                    snackCandidate,
+                    calorieErrorPct,
+                    proteinErrorPct,
+                    score: totalScore,
+                  };
                 }
-              } else if (!newWithin5 && !currentWithin5) {
-                if (errorPct < bestCombo.errorPct) {
-                  bestCombo = { b, l, d, s, errorPct, score: totalScore };
+              } else if (!isDualWithin5 && !currentDualWithin5) {
+                if (isCalorieWithin5 && !currentCalorieWithin5) {
+                  bestCombo = {
+                    breakfastCandidate,
+                    lunchCandidate,
+                    dinnerCandidate,
+                    snackCandidate,
+                    calorieErrorPct,
+                    proteinErrorPct,
+                    score: totalScore,
+                  };
+                } else if (isCalorieWithin5 && currentCalorieWithin5) {
+                  if (
+                    proteinErrorPct < bestCombo.proteinErrorPct ||
+                    (proteinErrorPct === bestCombo.proteinErrorPct && totalScore < bestCombo.score)
+                  ) {
+                    bestCombo = {
+                      breakfastCandidate,
+                      lunchCandidate,
+                      dinnerCandidate,
+                      snackCandidate,
+                      calorieErrorPct,
+                      proteinErrorPct,
+                      score: totalScore,
+                    };
+                  }
+                } else if (!isCalorieWithin5 && !currentCalorieWithin5) {
+                  if (calorieErrorPct < bestCombo.calorieErrorPct) {
+                    bestCombo = {
+                      breakfastCandidate,
+                      lunchCandidate,
+                      dinnerCandidate,
+                      snackCandidate,
+                      calorieErrorPct,
+                      proteinErrorPct,
+                      score: totalScore,
+                    };
+                  }
                 }
               }
             }
@@ -202,10 +278,10 @@ export class HeuristicPlanner {
     }
 
     // If search didn't find candidates, build deterministic fallback
-    const selectedB = bestCombo?.b ?? breakfastCandidates[0];
-    const selectedL = bestCombo?.l ?? lunchCandidates[0];
-    const selectedD = bestCombo?.d ?? dinnerCandidates[0];
-    const selectedS = bestCombo?.s ?? snackCandidates[0];
+    const selectedBreakfast = bestCombo?.breakfastCandidate ?? breakfastCandidates[0];
+    const selectedLunch = bestCombo?.lunchCandidate ?? lunchCandidates[0];
+    const selectedDinner = bestCombo?.dinnerCandidate ?? dinnerCandidates[0];
+    const selectedSnack = bestCombo?.snackCandidate ?? snackCandidates[0];
 
     // 5. Build MealSlot instances
     const now = new Date();
@@ -224,37 +300,37 @@ export class HeuristicPlanner {
       }));
     };
 
-    const breakfastSlotItems = createSlotItems('breakfast', selectedB);
-    const lunchSlotItems = createSlotItems('lunch', selectedL);
-    const dinnerSlotItems = createSlotItems('dinner', selectedD);
-    const snackSlotItems = createSlotItems('snack', selectedS);
+    const breakfastSlotItems = createSlotItems('breakfast', selectedBreakfast);
+    const lunchSlotItems = createSlotItems('lunch', selectedLunch);
+    const dinnerSlotItems = createSlotItems('dinner', selectedDinner);
+    const snackSlotItems = createSlotItems('snack', selectedSnack);
 
     const meals: Record<MealSlotType, MealSlot> = {
       breakfast: {
         slot: 'breakfast',
         label: 'Breakfast',
-        targetCalories: Math.round(targetCalories * 0.25),
+        targetCalories: Math.round(targetCalories * DEFAULT_MEAL_SLOT_RATIOS.breakfast),
         items: breakfastSlotItems,
         isLogged: false,
       },
       lunch: {
         slot: 'lunch',
         label: 'Lunch',
-        targetCalories: Math.round(targetCalories * 0.35),
+        targetCalories: Math.round(targetCalories * DEFAULT_MEAL_SLOT_RATIOS.lunch),
         items: lunchSlotItems,
         isLogged: false,
       },
       dinner: {
         slot: 'dinner',
         label: 'Dinner',
-        targetCalories: Math.round(targetCalories * 0.30),
+        targetCalories: Math.round(targetCalories * DEFAULT_MEAL_SLOT_RATIOS.dinner),
         items: dinnerSlotItems,
         isLogged: false,
       },
       snack: {
         slot: 'snack',
         label: 'Snack',
-        targetCalories: Math.round(targetCalories * 0.10),
+        targetCalories: Math.round(targetCalories * DEFAULT_MEAL_SLOT_RATIOS.snack),
         items: snackSlotItems,
         isLogged: false,
       },
@@ -267,7 +343,7 @@ export class HeuristicPlanner {
       ...snackSlotItems,
     ];
 
-    const aggregated = aggregatePlannedItemsTotals(allItems);
+    const aggregated = calculatePlannedItemsTotals(allItems);
 
     // Title generation based on goal preset or profile
     let title = `${profile.name.split(' ')[0]}'s Daily Plan`;
@@ -300,27 +376,28 @@ export class HeuristicPlanner {
       },
       totalCalories: aggregated.calories,
       totalMacros: aggregated.macros,
+      source: 'heuristic',
       createdAt: timestamp,
       updatedAt: timestamp,
     };
   }
 
   /**
-   * Generates candidate combinations for a slot, including single items
-   * and double items with appropriate portion multipliers to accommodate
-   * both low and high calorie budgets.
+   * Generates candidate combinations for a slot, preserving both calorie-aligned
+   * and protein-dense combinations to satisfy dual calorie and protein constraints.
    */
   private buildSlotCandidates(
     items: MenuItem[],
     slotTargetCalories: number,
+    slotTargetProtein: number,
     allowPairs = false,
     preferredZone: CampusZone | null = null
   ): SlotCandidate[] {
-    const candidates: SlotCandidate[] = [];
+    const rawCandidates: SlotCandidate[] = [];
 
     // 1. Single items (multiplier 1.0)
     for (const item of items) {
-      candidates.push({
+      rawCandidates.push({
         items: [{ item, multiplier: 1.0 }],
         calories: item.calories,
         macros: { ...item.macros },
@@ -329,7 +406,7 @@ export class HeuristicPlanner {
 
       // If slot target is high (> 600 kcal), offer 1.5x portion candidate
       if (slotTargetCalories >= 650 && item.calories <= 500) {
-        candidates.push({
+        rawCandidates.push({
           items: [{ item, multiplier: 1.5 }],
           calories: Math.round(item.calories * 1.5),
           macros: {
@@ -347,15 +424,15 @@ export class HeuristicPlanner {
 
     // 2. Paired items for lunch/dinner (entree + side/beverage/snack)
     if (allowPairs && slotTargetCalories >= 500 && items.length >= 2) {
-      for (let i = 0; i < Math.min(items.length, 12); i++) {
-        for (let j = i + 1; j < Math.min(items.length, 12); j++) {
+      for (let i = 0; i < Math.min(items.length, 14); i++) {
+        for (let j = i + 1; j < Math.min(items.length, 14); j++) {
           const item1 = items[i];
           const item2 = items[j];
           const pairCalories = item1.calories + item2.calories;
 
           // Only keep pairs within a reasonable window of slot target
-          if (Math.abs(pairCalories - slotTargetCalories) <= slotTargetCalories * 0.4) {
-            candidates.push({
+          if (Math.abs(pairCalories - slotTargetCalories) <= slotTargetCalories * 0.45) {
+            rawCandidates.push({
               items: [
                 { item: item1, multiplier: 1.0 },
                 { item: item2, multiplier: 1.0 },
@@ -376,8 +453,8 @@ export class HeuristicPlanner {
       }
     }
 
-    // Sort candidates by closeness to slot target calories and preferred zone
-    candidates.sort((a, b) => {
+    // Top candidates ranked by calorie match
+    const calorieSorted = [...rawCandidates].sort((a, b) => {
       let diffA = Math.abs(a.calories - slotTargetCalories);
       let diffB = Math.abs(b.calories - slotTargetCalories);
 
@@ -391,7 +468,25 @@ export class HeuristicPlanner {
       return diffA - diffB;
     });
 
-    return candidates.slice(0, 20);
+    // Top candidates ranked by protein match
+    const proteinSorted = [...rawCandidates].sort((a, b) => {
+      let diffA = Math.abs(a.macros.protein - slotTargetProtein);
+      let diffB = Math.abs(b.macros.protein - slotTargetProtein);
+      return diffA - diffB;
+    });
+
+    // Merge distinct candidates to preserve both high protein density and calorie accuracy
+    const candidateMap = new Map<string, SlotCandidate>();
+    for (const c of calorieSorted.slice(0, 12)) {
+      const key = c.items.map((entry) => `${entry.item.id}:${entry.multiplier}`).join('|');
+      candidateMap.set(key, c);
+    }
+    for (const c of proteinSorted.slice(0, 12)) {
+      const key = c.items.map((entry) => `${entry.item.id}:${entry.multiplier}`).join('|');
+      candidateMap.set(key, c);
+    }
+
+    return Array.from(candidateMap.values()).slice(0, 24);
   }
 }
 

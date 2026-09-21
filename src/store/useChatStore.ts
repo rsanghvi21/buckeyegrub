@@ -43,6 +43,7 @@ export const useChatStore = create<ChatStore>()(
       isLoading: false,
       isGeneratingPlan: false,
       error: null,
+      fallbackNotice: null,
       quickPrompts: DEFAULT_QUICK_PROMPTS,
       hasHydrated: false,
 
@@ -67,17 +68,86 @@ export const useChatStore = create<ChatStore>()(
           const profile = useUserStore.getState().profile;
           const currentHistory = get().messages;
           const reply = await brutusAI.chatWithBrutus(trimmed, currentHistory, profile);
+          const meta = brutusAI.lastExecutionMetadata;
 
           const assistantMsg: ChatMessage = {
             id: `msg_asst_${Date.now()}_${Math.random().toString(36).substring(2, 6)}`,
             role: 'assistant',
             content: reply,
             timestamp: new Date().toISOString(),
+            source: meta.source,
           };
 
           set((state) => ({
             messages: [...state.messages, assistantMsg],
             isLoading: false,
+            fallbackNotice: meta.fallbackReason ?? null,
+          }));
+        } catch (err: unknown) {
+          const errMsg = err instanceof Error ? err.message : 'Failed to reach Brutus';
+          set({
+            isLoading: false,
+            error: errMsg,
+          });
+        }
+      },
+
+      sendMessageStreaming: async (
+        content: string,
+        onToken?: (token: string) => void
+      ) => {
+        const trimmed = content.trim();
+        if (!trimmed) return;
+
+        const userMsg: ChatMessage = {
+          id: `msg_user_${Date.now()}_${Math.random().toString(36).substring(2, 6)}`,
+          role: 'user',
+          content: trimmed,
+          timestamp: new Date().toISOString(),
+        };
+
+        const asstId = `msg_asst_${Date.now()}_${Math.random().toString(36).substring(2, 6)}`;
+        const assistantPlaceholder: ChatMessage = {
+          id: asstId,
+          role: 'assistant',
+          content: '',
+          timestamp: new Date().toISOString(),
+        };
+
+        set((state) => ({
+          messages: [...state.messages, userMsg, assistantPlaceholder],
+          isLoading: true,
+          error: null,
+        }));
+
+        try {
+          const profile = useUserStore.getState().profile;
+          const currentHistory = get().messages.filter((m) => m.id !== asstId);
+
+          let accumulated = '';
+          const result = await brutusAI.streamChatWithBrutus(
+            trimmed,
+            currentHistory,
+            profile,
+            (token: string) => {
+              accumulated += token;
+              if (onToken) onToken(token);
+              set((state) => ({
+                messages: state.messages.map((m) =>
+                  m.id === asstId ? { ...m, content: accumulated } : m
+                ),
+              }));
+            }
+          );
+
+          set((state) => ({
+            messages: state.messages.map((m) =>
+              m.id === asstId
+                ? { ...m, content: result.reply, source: result.source }
+                : m
+            ),
+            isLoading: false,
+            fallbackNotice: result.fallbackReason ?? null,
           }));
         } catch (err: unknown) {
           const errMsg = err instanceof Error ? err.message : 'Failed to reach Brutus';
@@ -105,6 +175,7 @@ export const useChatStore = create<ChatStore>()(
             content: `O-H! 🌰 I just drew up a custom game plan for you: "${plan.title}"! Totaling ${plan.totalCalories} kcal and ${plan.totalMacros.protein}g protein across 4 campus meals. I've loaded it directly into your daily meal planner!`,
             timestamp: new Date().toISOString(),
             suggestedPlan: plan,
+            source: plan.source,
             quickActions: [
               { label: 'View Today\'s Plan', action: 'apply_plan' },
             ],
@@ -113,6 +184,7 @@ export const useChatStore = create<ChatStore>()(
           set((state) => ({
             messages: [...state.messages, assistantPlanMsg],
             isGeneratingPlan: false,
+            fallbackNotice: plan.fallbackReason ?? null,
           }));
 
           return plan;
@@ -130,7 +202,12 @@ export const useChatStore = create<ChatStore>()(
         set({
           messages: [],
           error: null,
+          fallbackNotice: null,
         });
+      },
+
+      clearFallbackNotice: () => {
+        set({ fallbackNotice: null });
       },
 
       resetToDemoChat: () => {
@@ -139,6 +216,7 @@ export const useChatStore = create<ChatStore>()(
           isLoading: false,
           isGeneratingPlan: false,
           error: null,
+          fallbackNotice: null,
           quickPrompts: DEFAULT_QUICK_PROMPTS,
         });
       },

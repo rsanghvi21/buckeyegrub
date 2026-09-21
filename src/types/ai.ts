@@ -23,6 +23,7 @@ export interface ChatMessage {
   timestamp: string; // ISO 8601
   suggestedPlan?: DailyMealPlan;
   quickActions?: ChatQuickAction[];
+  source?: 'gemini' | 'openai' | 'heuristic' | 'local';
 }
 
 export type GoalPreset =
@@ -49,15 +50,18 @@ export interface ChatStoreState {
   isLoading: boolean;
   isGeneratingPlan: boolean;
   error: string | null;
+  fallbackNotice: string | null;
   quickPrompts: string[];
   hasHydrated: boolean;
 }
 
 export interface ChatStoreActions {
   sendMessage: (content: string) => Promise<void>;
+  sendMessageStreaming: (content: string, onToken?: (token: string) => void) => Promise<void>;
   generateDayPlan: (options?: PlanGenerationOptions) => Promise<DailyMealPlan>;
   clearChat: () => void;
   resetToDemoChat: () => void;
+  clearFallbackNotice: () => void;
   setHasHydrated: (hydrated: boolean) => void;
 }
 
