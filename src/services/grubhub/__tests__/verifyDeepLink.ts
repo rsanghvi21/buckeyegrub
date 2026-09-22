@@ -117,6 +117,22 @@ async function runAllTests(): Promise<void> {
     buildGrubhubAppUri(slugOnlyVenue) === 'grubhub://restaurant/sample-venue-slug',
     'App URI derived from slug when no curated URI exists'
   );
+  assert(
+    buildGrubhubWebUrl('sample-venue-slug') === 'https://www.grubhub.com/restaurant/sample-venue-slug',
+    'Web URL derived directly from standalone slug string'
+  );
+  assert(
+    buildGrubhubAppUri('sample-venue-slug') === 'grubhub://restaurant/sample-venue-slug',
+    'App URI derived directly from standalone slug string'
+  );
+  assert(
+    buildGrubhubWebUrl('') === null,
+    'Web URL returns null for empty slug string'
+  );
+  assert(
+    buildGrubhubAppUri('   ') === null,
+    'App URI returns null for whitespace slug string'
+  );
 
   // =========================================================================
   // 4. Null-handling for venues with no Grubhub mapping
@@ -193,6 +209,47 @@ async function runAllTests(): Promise<void> {
   assert(
     itemCopy.includes('Grilled Chicken Power Bowl') && itemCopy.includes('protein'),
     'Single-item copy includes name and protein'
+  );
+
+  const sampleItemsWithRecipe: PlannedMealItem[] = [
+    {
+      id: 'test_item_recipe',
+      menuItem: {
+        id: 'test-menu-recipe',
+        venueId: scott.id,
+        name: 'Build Your Own Omelet',
+        description: 'Custom omelet',
+        category: 'breakfast',
+        calories: 420,
+        macros: { protein: 32, carbs: 12, fat: 28, fiber: 2 },
+        price: 0,
+        swipeEligible: true,
+        diningDollarsPrice: 0,
+        allergens: ['Eggs'],
+        dietaryTags: ['highProtein', 'glutenFree'],
+        customizationRecipe: 'Double egg whites, spinach, turkey bacon, cheddar',
+      },
+      servingMultiplier: 1,
+      isLogged: false,
+    },
+  ];
+
+  const recipeSlot: MealSlot = {
+    slot: 'breakfast',
+    label: 'Breakfast',
+    items: sampleItemsWithRecipe,
+    isLogged: false,
+  };
+
+  const recipeCopy = generateGrubhubCustomizationCopy(recipeSlot, scott.name);
+  assert(
+    recipeCopy.includes('Customization: Double egg whites, spinach, turkey bacon, cheddar'),
+    'Customization copy includes customization recipe line when present'
+  );
+  const singleItemRecipeCopy = generateItemCustomizationCopy(sampleItemsWithRecipe[0]);
+  assert(
+    singleItemRecipeCopy.includes('Double egg whites, spinach, turkey bacon, cheddar'),
+    'Single-item copy includes customization recipe text'
   );
 
   // =========================================================================

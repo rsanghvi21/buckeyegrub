@@ -1,27 +1,29 @@
 /**
  * BuckeyeGrub – Grubhub Order Assistant Modal (Checkpoint 6)
  * Displays a venue's order details (info, hours), the meal items + customization
- * recipe, a macro summary, and two actions: Copy Customization (clipboard) and
+ * recipe, a macro summary, and two actions: Copy Customization (clipboard + haptic) and
  * Open Grubhub to Order (deep-link with web fallback).
  *
  * Route params:
  *   - venueId (required): a DiningVenue id.
  *   - slot (optional): a MealSlotType; when present the modal shows that slot from
- *     the active meal plan, otherwise it falls back to the venue's catalog items.
+ *     the active meal plan (filtered to venue items), otherwise it falls back to
+ *     the venue's catalog items.
  */
 
 import React, { useMemo, useRef, useState } from 'react';
 import {
   Alert,
-  Platform,
   ScrollView,
   StyleSheet,
   Text,
   View,
+  useColorScheme,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
 import * as Clipboard from 'expo-clipboard';
+import * as Haptics from 'expo-haptics';
 import {
   Check,
   Clipboard as ClipboardIcon,
@@ -32,7 +34,7 @@ import {
 } from 'lucide-react-native';
 
 import { Badge, Button, Card } from '@/src/components/ui';
-import { colors, radii, spacing, typography } from '@/src/constants/theme';
+import { getThemeColors, radii, spacing, typography } from '@/src/constants/theme';
 import {
   OSU_MENU_ITEMS_BY_VENUE,
   OSU_VENUES_MAP,
@@ -48,6 +50,7 @@ import {
   MealSlot,
   MealSlotType,
   PlannedMealItem,
+  calculatePlannedItemsTotals,
 } from '@/src/types/mealPlan';
 
 const DAY_KEYS: DayOfWeek[] = [
@@ -71,6 +74,9 @@ const DAY_LABELS: Record<DayOfWeek, string> = {
 };
 
 const VALID_SLOTS: MealSlotType[] = ['breakfast', 'lunch', 'dinner', 'snack'];
+const EMPTY_BUTTON_MIN_WIDTH = 160;
+const CLOSE_ICON_SIZE = 18;
+const ACTION_ICON_SIZE = 16;
 
 /** Formats a 24h "HH:mm" string into a friendly 12h label (e.g., "7:00 AM"). */
 function formatTime(time: string): string {
@@ -98,6 +104,11 @@ export default function GrubhubAssistantModal() {
   const params = useLocalSearchParams<{ venueId?: string; slot?: string }>();
   const activePlan = useMealPlanStore((s) => s.activePlan);
 
+  const colorScheme = useColorScheme();
+  const isDark = colorScheme === 'dark';
+  const themeColors = useMemo(() => getThemeColors(isDark), [isDark]);
+  const styles = useMemo(() => createStyles(themeColors), [themeColors]);
+
   const [copied, setCopied] = useState(false);
   const copyTimeout = useRef<ReturnType<typeof setTimeout> | null>(null);
 
@@ -109,13 +120,22 @@ export default function GrubhubAssistantModal() {
 
   const venue = venueId ? OSU_VENUES_MAP[venueId] : undefined;
 
-  // Resolve the list of planned items: prefer the active plan slot, else fall
+  // Resolve the list of planned items: prefer the active plan slot (filtered to
+  // only items for this venue to prevent cross-venue pollution), else fall
   // back to the venue's catalog items (first 4 for a concise recommendation).
   const displaySlot: MealSlot | null = useMemo(() => {
     if (!venue) return null;
 
     if (slot && activePlan.meals[slot] && activePlan.meals[slot].items.length > 0) {
-      return activePlan.meals[slot];
+      const venueItems = activePlan.meals[slot].items.filter(
+        (entry) => entry.menuItem.venueId === venue.id
+      );
+      if (venueItems.length > 0) {
+        return {
+          ...activePlan.meals[slot],
+          items: venueItems,
+        };
+      }
     }
 
     const catalogItems = (OSU_MENU_ITEMS_BY_VENUE[venue.id] ?? []).slice(0, 4);
@@ -131,26 +151,17 @@ export default function GrubhubAssistantModal() {
     };
   }, [venue, slot, activePlan]);
 
-  // Macro totals across the display items.
+  // Macro totals across the display items using centralized domain helper.
   const totals = useMemo(() => {
-    let calories = 0;
-    let protein = 0;
-    let carbs = 0;
-    let fat = 0;
-    if (displaySlot) {
-      for (const entry of displaySlot.items) {
-        const mult = entry.servingMultiplier > 0 ? entry.servingMultiplier : 1;
-        calories += entry.menuItem.calories * mult;
-        protein += entry.menuItem.macros.protein * mult;
-        carbs += entry.menuItem.macros.carbs * mult;
-        fat += entry.menuItem.macros.fat * mult;
-      }
+    if (!displaySlot) {
+      return { calories: 0, protein: 0, carbs: 0, fat: 0 };
     }
+    const { calories, macros } = calculatePlannedItemsTotals(displaySlot.items);
     return {
       calories: Math.round(calories),
-      protein: Math.round(protein * 10) / 10,
-      carbs: Math.round(carbs * 10) / 10,
-      fat: Math.round(fat * 10) / 10,
+      protein: Math.round(macros.protein * 10) / 10,
+      carbs: Math.round(macros.carbs * 10) / 10,
+      fat: Math.round(macros.fat * 10) / 10,
     };
   }, [displaySlot]);
 
@@ -181,6 +192,11 @@ export default function GrubhubAssistantModal() {
     const copyText = generateGrubhubCustomizationCopy(displaySlot, venue.name);
     try {
       await Clipboard.setStringAsync(copyText);
+      try {
+        await Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+      } catch {
+        // Haptics safe fallback for environments without vibration hardware
+      }
       setCopied(true);
       if (copyTimeout.current) clearTimeout(copyTimeout.current);
       copyTimeout.current = setTimeout(() => setCopied(false), 2000);
@@ -216,7 +232,7 @@ export default function GrubhubAssistantModal() {
             title="Close"
             variant="primary"
             size="md"
-            leftIcon={<X size={16} color={colors.textInverse} />}
+            leftIcon={<X size={ACTION_ICON_SIZE} color={themeColors.textInverse} />}
             onPress={handleClose}
             style={styles.emptyButton}
           />
@@ -241,7 +257,7 @@ export default function GrubhubAssistantModal() {
           onPress={handleClose}
           accessibilityLabel="Close order assistant"
         >
-          <X size={18} color={colors.scarlet} />
+          <X size={CLOSE_ICON_SIZE} color={themeColors.scarlet} />
         </Button>
       </View>
 
@@ -253,12 +269,12 @@ export default function GrubhubAssistantModal() {
         {/* Venue info */}
         <Card variant="filled" padding="md" style={styles.infoCard}>
           <View style={styles.infoRow}>
-            <MapPin size={16} color={colors.scarlet} />
+            <MapPin size={ACTION_ICON_SIZE} color={themeColors.scarlet} />
             <Text style={styles.infoText}>{venue.address}</Text>
           </View>
           {todayHours ? (
             <View style={styles.infoRow}>
-              <Clock size={16} color={colors.scarlet} />
+              <Clock size={ACTION_ICON_SIZE} color={themeColors.scarlet} />
               <Text style={styles.infoText}>
                 {todayHours.label}: {todayHours.text}
               </Text>
@@ -272,10 +288,34 @@ export default function GrubhubAssistantModal() {
         </View>
         <Card variant="elevated" padding="md" style={styles.macroCard}>
           <View style={styles.macroRow}>
-            <MacroStat label="Calories" value={`${totals.calories}`} unit="kcal" color={colors.macros.calories} />
-            <MacroStat label="Protein" value={`${totals.protein}`} unit="g" color={colors.macros.protein} />
-            <MacroStat label="Carbs" value={`${totals.carbs}`} unit="g" color={colors.macros.carbs} />
-            <MacroStat label="Fat" value={`${totals.fat}`} unit="g" color={colors.macros.fat} />
+            <MacroStat
+              label="Calories"
+              value={`${totals.calories}`}
+              unit="kcal"
+              color={themeColors.macros.calories}
+              styles={styles}
+            />
+            <MacroStat
+              label="Protein"
+              value={`${totals.protein}`}
+              unit="g"
+              color={themeColors.macros.protein}
+              styles={styles}
+            />
+            <MacroStat
+              label="Carbs"
+              value={`${totals.carbs}`}
+              unit="g"
+              color={themeColors.macros.carbs}
+              styles={styles}
+            />
+            <MacroStat
+              label="Fat"
+              value={`${totals.fat}`}
+              unit="g"
+              color={themeColors.macros.fat}
+              styles={styles}
+            />
           </View>
         </Card>
 
@@ -327,9 +367,9 @@ export default function GrubhubAssistantModal() {
           size="md"
           leftIcon={
             copied ? (
-              <Check size={16} color={colors.success} />
+              <Check size={ACTION_ICON_SIZE} color={themeColors.success} />
             ) : (
-              <ClipboardIcon size={16} color={colors.scarlet} />
+              <ClipboardIcon size={ACTION_ICON_SIZE} color={themeColors.scarlet} />
             )
           }
           onPress={handleCopy}
@@ -339,7 +379,7 @@ export default function GrubhubAssistantModal() {
           title="Open Grubhub to Order"
           variant="primary"
           size="md"
-          leftIcon={<ExternalLink size={16} color={colors.textInverse} />}
+          leftIcon={<ExternalLink size={ACTION_ICON_SIZE} color={themeColors.textInverse} />}
           onPress={handleOpenGrubhub}
           style={styles.actionButton}
         />
@@ -353,9 +393,10 @@ interface MacroStatProps {
   value: string;
   unit: string;
   color: string;
+  styles: ReturnType<typeof createStyles>;
 }
 
-const MacroStat: React.FC<MacroStatProps> = ({ label, value, unit, color }) => (
+const MacroStat: React.FC<MacroStatProps> = ({ label, value, unit, color, styles }) => (
   <View style={styles.macroStat}>
     <Text style={[styles.macroValue, { color }]}>{value}</Text>
     <Text style={styles.macroUnit}>{unit}</Text>
@@ -363,152 +404,151 @@ const MacroStat: React.FC<MacroStatProps> = ({ label, value, unit, color }) => (
   </View>
 );
 
-const styles = StyleSheet.create({
-  safeArea: {
-    flex: 1,
-    backgroundColor: colors.background,
-  },
-  container: {
-    flex: 1,
-  },
-  contentContainer: {
-    padding: spacing.md,
-    paddingBottom: spacing.xl,
-  },
-  headerRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingHorizontal: spacing.md,
-    paddingTop: spacing.md,
-    paddingBottom: spacing.sm,
-    borderBottomWidth: 1,
-    borderBottomColor: colors.border,
-  },
-  headerText: {
-    flex: 1,
-    marginRight: spacing.sm,
-  },
-  venueName: {
-    fontSize: typography.sizes.xl,
-    fontWeight: typography.weights.bold,
-    color: colors.textPrimary,
-  },
-  slotLabel: {
-    fontSize: typography.sizes.sm,
-    color: colors.scarlet,
-    fontWeight: typography.weights.semiBold,
-    marginTop: 2,
-  },
-  infoCard: {
-    marginBottom: spacing.lg,
-    gap: spacing.xs,
-  },
-  infoRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: spacing.sm,
-  },
-  infoText: {
-    flex: 1,
-    fontSize: typography.sizes.sm,
-    color: colors.textSecondary,
-  },
-  sectionHeader: {
-    marginBottom: spacing.sm,
-  },
-  sectionTitle: {
-    fontSize: typography.sizes.lg,
-    fontWeight: typography.weights.bold,
-    color: colors.textPrimary,
-  },
-  sectionSubtitle: {
-    fontSize: typography.sizes.xs,
-    color: colors.textSecondary,
-    marginTop: 2,
-  },
-  macroCard: {
-    marginBottom: spacing.lg,
-  },
-  macroRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-  },
-  macroStat: {
-    alignItems: 'center',
-    flex: 1,
-  },
-  macroValue: {
-    fontSize: typography.sizes.xl,
-    fontWeight: typography.weights.bold,
-  },
-  macroUnit: {
-    fontSize: typography.sizes.xs,
-    color: colors.textMuted,
-    marginTop: -2,
-  },
-  macroLabel: {
-    fontSize: typography.sizes.xs,
-    color: colors.textSecondary,
-    marginTop: 2,
-  },
-  itemCard: {
-    marginBottom: spacing.sm,
-  },
-  itemName: {
-    fontSize: typography.sizes.md,
-    fontWeight: typography.weights.bold,
-    color: colors.textPrimary,
-  },
-  itemRecipe: {
-    fontSize: typography.sizes.sm,
-    color: colors.textSecondary,
-    marginTop: spacing.xs,
-    fontStyle: 'italic',
-  },
-  itemMeta: {
-    fontSize: typography.sizes.xs,
-    color: colors.textMuted,
-    marginTop: spacing.xs,
-  },
-  badgeRow: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: spacing.xs,
-    marginTop: spacing.sm,
-  },
-  actionBar: {
-    flexDirection: 'row',
-    gap: spacing.sm,
-    padding: spacing.md,
-    borderTopWidth: 1,
-    borderTopColor: colors.border,
-    backgroundColor: colors.surface,
-    ...(Platform.OS === 'web' ? {} : {}),
-  },
-  actionButton: {
-    flex: 1,
-  },
-  emptyState: {
-    flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
-    padding: spacing.xl,
-  },
-  emptyTitle: {
-    fontSize: typography.sizes.lg,
-    fontWeight: typography.weights.bold,
-    color: colors.textPrimary,
-    marginBottom: spacing.sm,
-  },
-  emptyBody: {
-    fontSize: typography.sizes.sm,
-    color: colors.textSecondary,
-    textAlign: 'center',
-    marginBottom: spacing.lg,
-  },
-  emptyButton: {
-    minWidth: 160,
-    borderRadius: radii.md,
-  },
-});
+const createStyles = (c: ReturnType<typeof getThemeColors>) =>
+  StyleSheet.create({
+    safeArea: {
+      flex: 1,
+      backgroundColor: c.background,
+    },
+    container: {
+      flex: 1,
+    },
+    contentContainer: {
+      padding: spacing.md,
+      paddingBottom: spacing.xl,
+    },
+    headerRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+      paddingHorizontal: spacing.md,
+      paddingTop: spacing.md,
+      paddingBottom: spacing.sm,
+      borderBottomWidth: 1,
+      borderBottomColor: c.border,
+    },
+    headerText: {
+      flex: 1,
+      marginRight: spacing.sm,
+    },
+    venueName: {
+      fontSize: typography.sizes.xl,
+      fontWeight: typography.weights.bold,
+      color: c.textPrimary,
+    },
+    slotLabel: {
+      fontSize: typography.sizes.sm,
+      color: c.scarlet,
+      fontWeight: typography.weights.semiBold,
+      marginTop: spacing.xs / 2,
+    },
+    infoCard: {
+      marginBottom: spacing.lg,
+      gap: spacing.xs,
+    },
+    infoRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: spacing.sm,
+    },
+    infoText: {
+      flex: 1,
+      fontSize: typography.sizes.sm,
+      color: c.textSecondary,
+    },
+    sectionHeader: {
+      marginBottom: spacing.sm,
+    },
+    sectionTitle: {
+      fontSize: typography.sizes.lg,
+      fontWeight: typography.weights.bold,
+      color: c.textPrimary,
+    },
+    sectionSubtitle: {
+      fontSize: typography.sizes.xs,
+      color: c.textSecondary,
+      marginTop: spacing.xs / 2,
+    },
+    macroCard: {
+      marginBottom: spacing.lg,
+    },
+    macroRow: {
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+    },
+    macroStat: {
+      alignItems: 'center',
+      flex: 1,
+    },
+    macroValue: {
+      fontSize: typography.sizes.xl,
+      fontWeight: typography.weights.bold,
+    },
+    macroUnit: {
+      fontSize: typography.sizes.xs,
+      color: c.textMuted,
+    },
+    macroLabel: {
+      fontSize: typography.sizes.xs,
+      color: c.textSecondary,
+      marginTop: spacing.xs / 2,
+    },
+    itemCard: {
+      marginBottom: spacing.sm,
+    },
+    itemName: {
+      fontSize: typography.sizes.md,
+      fontWeight: typography.weights.bold,
+      color: c.textPrimary,
+    },
+    itemRecipe: {
+      fontSize: typography.sizes.sm,
+      color: c.textSecondary,
+      marginTop: spacing.xs,
+      fontStyle: 'italic',
+    },
+    itemMeta: {
+      fontSize: typography.sizes.xs,
+      color: c.textMuted,
+      marginTop: spacing.xs,
+    },
+    badgeRow: {
+      flexDirection: 'row',
+      flexWrap: 'wrap',
+      gap: spacing.xs,
+      marginTop: spacing.sm,
+    },
+    actionBar: {
+      flexDirection: 'row',
+      gap: spacing.sm,
+      padding: spacing.md,
+      borderTopWidth: 1,
+      borderTopColor: c.border,
+      backgroundColor: c.surface,
+    },
+    actionButton: {
+      flex: 1,
+    },
+    emptyState: {
+      flex: 1,
+      alignItems: 'center',
+      justifyContent: 'center',
+      padding: spacing.xl,
+    },
+    emptyTitle: {
+      fontSize: typography.sizes.lg,
+      fontWeight: typography.weights.bold,
+      color: c.textPrimary,
+      marginBottom: spacing.sm,
+    },
+    emptyBody: {
+      fontSize: typography.sizes.sm,
+      color: c.textSecondary,
+      textAlign: 'center',
+      marginBottom: spacing.lg,
+    },
+    emptyButton: {
+      minWidth: EMPTY_BUTTON_MIN_WIDTH,
+      borderRadius: radii.md,
+    },
+  });

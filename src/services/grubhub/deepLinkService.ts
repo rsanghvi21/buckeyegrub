@@ -11,33 +11,52 @@ const GRUBHUB_WEB_BASE = 'https://www.grubhub.com/restaurant';
 const GRUBHUB_APP_BASE = 'grubhub://restaurant';
 
 /**
- * Builds the Grubhub web ordering URL for a venue.
- * Prefers the curated `grubhubUrl`, else derives from `grubhubSlug`.
- * Returns null when the venue has no Grubhub mapping.
+ * Shared resolver for Grubhub web and app targets.
+ * Supports passing either a DiningVenue domain model or a standalone slug string.
  */
-export function buildGrubhubWebUrl(venue: DiningVenue): string | null {
-  if (venue.grubhubUrl && venue.grubhubUrl.trim().length > 0) {
-    return venue.grubhubUrl;
+function resolveGrubhubTarget(
+  target: DiningVenue | string,
+  base: string,
+  curatedOverride?: (venue: DiningVenue) => string | undefined
+): string | null {
+  if (typeof target === 'string') {
+    const trimmed = target.trim();
+    return trimmed.length > 0 ? `${base}/${trimmed}` : null;
   }
-  if (venue.grubhubSlug && venue.grubhubSlug.trim().length > 0) {
-    return `${GRUBHUB_WEB_BASE}/${venue.grubhubSlug}`;
+  const override = curatedOverride ? curatedOverride(target) : undefined;
+  if (override && override.trim().length > 0) {
+    return override;
+  }
+  if (target.grubhubSlug && target.grubhubSlug.trim().length > 0) {
+    return `${base}/${target.grubhubSlug}`;
   }
   return null;
 }
 
 /**
- * Builds the Grubhub native app URI (deep link) for a venue.
- * Prefers the curated `grubhubUri`, else derives from `grubhubSlug`.
- * Returns null when the venue has no Grubhub mapping.
+ * Builds the Grubhub web ordering URL for a venue or slug string.
+ * Prefers the curated `grubhubUrl`, else derives from `grubhubSlug` or the slug string.
+ * Returns null when the venue or slug is empty/unmapped.
  */
-export function buildGrubhubAppUri(venue: DiningVenue): string | null {
-  if (venue.grubhubUri && venue.grubhubUri.trim().length > 0) {
-    return venue.grubhubUri;
-  }
-  if (venue.grubhubSlug && venue.grubhubSlug.trim().length > 0) {
-    return `${GRUBHUB_APP_BASE}/${venue.grubhubSlug}`;
-  }
-  return null;
+export function buildGrubhubWebUrl(venueOrSlug: DiningVenue | string): string | null {
+  return resolveGrubhubTarget(
+    venueOrSlug,
+    GRUBHUB_WEB_BASE,
+    (venue) => venue.grubhubUrl
+  );
+}
+
+/**
+ * Builds the Grubhub native app URI (deep link) for a venue or slug string.
+ * Prefers the curated `grubhubUri`, else derives from `grubhubSlug` or the slug string.
+ * Returns null when the venue or slug is empty/unmapped.
+ */
+export function buildGrubhubAppUri(venueOrSlug: DiningVenue | string): string | null {
+  return resolveGrubhubTarget(
+    venueOrSlug,
+    GRUBHUB_APP_BASE,
+    (venue) => venue.grubhubUri
+  );
 }
 
 /**
@@ -71,44 +90,53 @@ export async function openVenueOrder(venue: DiningVenue): Promise<OpenOrderResul
     };
   }
 
-  // Lazy-load expo-linking so the pure URL builders above can be imported in
-  // non-native contexts (e.g. verification scripts) without pulling in
-  // react-native at module-evaluation time.
-  const Linking = await import('expo-linking');
+  try {
+    // Lazy-load expo-linking so the pure URL builders above can be imported in
+    // non-native contexts (e.g. verification scripts) without pulling in
+    // react-native at module-evaluation time.
+    const Linking = await import('expo-linking');
 
-  // 1. Attempt native Grubhub app deep link.
-  if (appUri) {
-    try {
-      const canOpenApp = await Linking.canOpenURL(appUri);
-      if (canOpenApp) {
-        await Linking.openURL(appUri);
-        return { opened: true, usedFallback: false, target: appUri };
+    // 1. Attempt native Grubhub app deep link.
+    if (appUri) {
+      try {
+        const canOpenApp = await Linking.canOpenURL(appUri);
+        if (canOpenApp) {
+          await Linking.openURL(appUri);
+          return { opened: true, usedFallback: false, target: appUri };
+        }
+      } catch {
+        // Ignore and fall through to the web fallback.
       }
-    } catch {
-      // Ignore and fall through to the web fallback.
     }
-  }
 
-  // 2. Fall back to the Grubhub web URL.
-  if (webUrl) {
-    try {
-      await Linking.openURL(webUrl);
-      return { opened: true, usedFallback: true, target: webUrl };
-    } catch (error) {
-      return {
-        opened: false,
-        usedFallback: true,
-        target: webUrl,
-        error: error instanceof Error ? error.message : 'Failed to open Grubhub link.',
-      };
+    // 2. Fall back to the Grubhub web URL.
+    if (webUrl) {
+      try {
+        await Linking.openURL(webUrl);
+        return { opened: true, usedFallback: true, target: webUrl };
+      } catch (error) {
+        return {
+          opened: false,
+          usedFallback: true,
+          target: webUrl,
+          error: error instanceof Error ? error.message : 'Failed to open Grubhub link.',
+        };
+      }
     }
-  }
 
-  // 3. Only an app URI existed but the app is not installed.
-  return {
-    opened: false,
-    usedFallback: false,
-    target: appUri,
-    error: `Grubhub app is not available and no web link exists for ${venue.name}.`,
-  };
+    // 3. Only an app URI existed but the app is not installed.
+    return {
+      opened: false,
+      usedFallback: false,
+      target: appUri,
+      error: `Grubhub app is not available and no web link exists for ${venue.name}.`,
+    };
+  } catch (error) {
+    return {
+      opened: false,
+      usedFallback: false,
+      target: null,
+      error: error instanceof Error ? error.message : 'Failed to initialize linking service.',
+    };
+  }
 }
