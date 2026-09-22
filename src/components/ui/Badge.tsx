@@ -14,14 +14,21 @@ export type BadgeVariant =
   | 'scarlet'
   | 'gold'
   | 'outline'
+  | 'success'
+  | 'dietary'
   | 'high-protein'
+  | 'highProtein'
   | 'vegan'
   | 'vegetarian'
   | 'halal'
   | 'gluten-free'
+  | 'glutenFree'
   | 'dairy-free'
+  | 'dairyFree'
   | 'swipe'
+  | 'paymentSwipe'
   | 'dining-dollars'
+  | 'paymentDiningDollars'
   | 'buckid-cash';
 
 export type BadgeSize = 'sm' | 'md';
@@ -63,7 +70,15 @@ export const Badge: React.FC<BadgeProps> = ({
           text: colors.textPrimary,
           border: colors.grayBorder,
         };
+      case 'success':
+        return {
+          bg: colors.payment.diningDollars.bg,
+          text: colors.success,
+          border: colors.payment.diningDollars.border,
+        };
+      case 'dietary':
       case 'high-protein':
+      case 'highProtein':
         return colors.dietary.highProtein;
       case 'vegan':
         return colors.dietary.vegan;
@@ -72,12 +87,16 @@ export const Badge: React.FC<BadgeProps> = ({
       case 'halal':
         return colors.dietary.halal;
       case 'gluten-free':
+      case 'glutenFree':
         return colors.dietary.glutenFree;
       case 'dairy-free':
+      case 'dairyFree':
         return colors.dietary.dairyFree;
       case 'swipe':
+      case 'paymentSwipe':
         return colors.payment.swipe;
       case 'dining-dollars':
+      case 'paymentDiningDollars':
         return colors.payment.diningDollars;
       case 'buckid-cash':
         return colors.payment.buckidCash;

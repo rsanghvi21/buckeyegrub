@@ -140,34 +140,43 @@
 ---
 
 ## Checkpoint 7: Core Screens & User Experience (Expo Router)
-- [ ] Root Layout & Shell (`app/_layout.tsx`, `app/(tabs)/_layout.tsx`):
-  - Scarlet-accented bottom tab bar with Lucide icons (Home, Bot, Utensils, Star, User).
-  - Dark/Light mode theme provider.
-- [ ] Dashboard Screen (`app/(tabs)/index.tsx`):
-  - Animated calorie progress ring with percentage indicator.
-  - Horizontal animated bars for Protein, Carbs, Fat.
-  - Daily timeline: Breakfast, Lunch, Dinner, Snack cards.
-  - Buckeye Power Score & Streak indicator.
-  - Quick "Order via Grubhub" button on each meal card.
-- [ ] BrutusAI Planner Screen (`app/(tabs)/ai-planner.tsx`):
-  - Tab 1: **1-Click Plan Generator** with goal presets (*"Post-RPAC Chest Day"*, *"Cut & Lean"*, *"Budget Day"*).
-  - Tab 2: **Ask Brutus** conversational chat with avatar bubbles and quick suggestion chips.
-- [ ] Campus Menus Screen (`app/(tabs)/menus.tsx`):
-  - Campus Zone Switcher (North / South / West).
-  - Payment filter (Swipes vs. Dining Dollars).
-  - Search input with real-time filtering.
-  - Venue cards with expanding menu item lists and nutrition badges.
-- [ ] Favorites & Saved Screen (`app/(tabs)/saved.tsx`):
-  - List of saved daily plans and favorite meal combos with 1-tap re-use.
-- [ ] Profile Screen (`app/(tabs)/profile.tsx`):
-  - Fitness goal selector (Muscle Gain, Fat Loss, Maintenance, Athletic).
-  - Calorie & macro targets editor with TDEE calculator assistance.
-  - BuckID swipe & Dining Dollar balance manager.
-  - Dietary restrictions multi-select.
-  - API Key settings for Gemini / OpenAI.
-- [ ] Nutrition Modal Sheet (`app/modal/meal-details.tsx`):
-  - Comprehensive nutrition facts table (calories, protein, carbs, fat, fiber, sodium, allergens).
-- **Gate 7 Acceptance Criteria**: All 5 tabs and modals render seamlessly; navigation flows operate without lag or layout shifts.
+- [x] Root Layout & Shell (`app/_layout.tsx`, `app/(tabs)/_layout.tsx`):
+  - [x] Scarlet-accented bottom tab bar with Lucide icons (Home, Bot, Utensils, Star, User).
+  - [x] Dark/Light mode theme provider (`src/context/ThemeContext.tsx`).
+- [x] Dashboard Screen (`app/(tabs)/index.tsx`):
+  - [x] Animated calorie progress ring with percentage indicator.
+  - [x] Horizontal animated bars for Protein, Carbs, Fat.
+  - [x] Daily timeline: Breakfast, Lunch, Dinner, Snack cards.
+  - [x] Buckeye Power Score & Streak indicator.
+  - [x] Quick "Order via Grubhub" button on each meal card.
+- [x] BrutusAI Planner Screen (`app/(tabs)/ai-planner.tsx`):
+  - [x] Tab 1: **1-Click Plan Generator** with goal presets (*"Post-RPAC Chest Day"*, *"Cut & Lean"*, *"Budget Day"*, *"Bulk & Power"*).
+  - [x] Tab 2: **Ask Brutus** conversational chat with avatar bubbles and quick suggestion chips.
+- [x] Campus Menus Screen (`app/(tabs)/menus.tsx`):
+  - [x] Campus Zone Switcher (North / South / West / All).
+  - [x] Payment filter (Swipes vs. Dining Dollars with 35% discount calculation).
+  - [x] Search input with real-time filtering.
+  - [x] Venue cards with expanding menu item lists and nutrition badges.
+- [x] Favorites & Saved Screen (`app/(tabs)/saved.tsx`):
+  - [x] List of saved daily plans and favorite meal combos with 1-tap re-use.
+- [x] Profile Screen (`app/(tabs)/profile.tsx`):
+  - [x] Fitness goal selector (Muscle Gain, Fat Loss, Maintenance, Athletic).
+  - [x] Calorie & macro targets editor with TDEE calculator assistance (`src/utils/nutrition.ts`).
+  - [x] BuckID swipe & Dining Dollar balance manager.
+  - [x] Dietary restrictions multi-select.
+  - [x] API Key settings for Gemini / OpenAI.
+- [x] Nutrition Modal Sheet (`app/modal/meal-details.tsx`):
+  - [x] Comprehensive nutrition facts table (calories, protein, carbs, fat, fiber, sodium, allergens).
+- **Gate 7 Acceptance Criteria**: [PASSED] All 5 tabs and modals render seamlessly; navigation flows operate without lag or layout shifts; 11/11 automated assertions passed in `src/__tests__/verifyCheckpoint7.ts`; zero regressions across 260+ tests in state, catalog, and Grubhub suites; `npx tsc --noEmit` clean with 0 errors; Expo web bundle exported cleanly with 3,186 modules.
+- **Implementation Notes**:
+  - Implemented on branch `feat/checkpoint-7-core-screens`.
+  - Replaced legacy showcase screen `app/index.tsx` with production Expo Router pathless group architecture in `app/(tabs)/index.tsx`.
+  - Added `src/context/ThemeContext.tsx` providing reactive Light/Dark theming synchronized with `useUserStore` and device appearance.
+  - Added pure nutrition calculation engine in `src/utils/nutrition.ts` (Mifflin-St Jeor BMR, TDEE activity scaling, goal-based macro distribution, dynamic Buckeye Power Score).
+  - Verifier: `src/__tests__/verifyCheckpoint7.ts` (run via `npx tsx src/__tests__/verifyCheckpoint7.ts`).
+- **Commit History**:
+  - `dba63f0` (2026-09-22T18:13:58-04:00): `feat(screens): implement checkpoint 7 - core screens & user experience (expo router)`
+  - `844a542` (2026-09-22T19:03:20-04:00): `fix(screens): remediate code review findings for Checkpoint 7`
 
 ---
 

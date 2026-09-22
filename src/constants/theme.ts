@@ -148,16 +148,19 @@ export const getThemeColors = (isDark: boolean) => ({
   ...(isDark ? darkSemanticColors : lightSemanticColors),
 });
 
+const fontSizes = {
+  xs: 11,
+  sm: 13,
+  md: 15,
+  lg: 17,
+  xl: 20,
+  xxl: 24,
+  xxxl: 32,
+} as const;
+
 export const typography = {
-  sizes: {
-    xs: 11,
-    sm: 13,
-    md: 15,
-    lg: 17,
-    xl: 20,
-    xxl: 24,
-    xxxl: 32,
-  },
+  sizes: fontSizes,
+  fontSizes: fontSizes,
   lineHeights: {
     xs: 15,
     sm: 18,
@@ -260,5 +263,14 @@ export type Colors = typeof colors;
 export type DietaryTag = keyof typeof palette.dietary;
 export type PaymentTypeKey = keyof typeof palette.payment;
 export type MacroType = keyof typeof palette.macros;
+
+export const DIETARY_TAG_OPTIONS: { tag: DietaryTag; label: string }[] = [
+  { tag: 'highProtein', label: 'High-Protein' },
+  { tag: 'vegan', label: 'Vegan' },
+  { tag: 'vegetarian', label: 'Vegetarian' },
+  { tag: 'glutenFree', label: 'Gluten-Free' },
+  { tag: 'halal', label: 'Halal' },
+  { tag: 'dairyFree', label: 'Dairy-Free' },
+];
 
 export default theme;

@@ -22,11 +22,13 @@ export type ButtonSize = 'sm' | 'md' | 'lg';
 
 export interface ButtonProps {
   title?: string;
+  label?: string; // alias for title
   children?: React.ReactNode;
   variant?: ButtonVariant;
   size?: ButtonSize;
   disabled?: boolean;
   loading?: boolean;
+  icon?: React.ReactNode; // alias for leftIcon
   leftIcon?: React.ReactNode;
   rightIcon?: React.ReactNode;
   fullWidth?: boolean;
@@ -40,11 +42,13 @@ const AnimatedPressable = Animated.createAnimatedComponent(Pressable);
 
 export const Button: React.FC<ButtonProps> = ({
   title,
+  label,
   children,
   variant = 'primary',
   size = 'md',
   disabled = false,
   loading = false,
+  icon,
   leftIcon,
   rightIcon,
   fullWidth = false,
@@ -53,6 +57,8 @@ export const Button: React.FC<ButtonProps> = ({
   textStyle,
   accessibilityLabel,
 }) => {
+  const displayTitle = label ?? title;
+  const resolvedLeftIcon = icon ?? leftIcon;
   const scale = useSharedValue(1);
 
   const handlePressIn = () => {
@@ -103,7 +109,7 @@ export const Button: React.FC<ButtonProps> = ({
       disabled={!isInteractive}
       accessibilityRole="button"
       accessibilityState={{ disabled: !isInteractive, busy: loading }}
-      accessibilityLabel={accessibilityLabel || title}
+      accessibilityLabel={accessibilityLabel || displayTitle}
       style={[
         baseStyles.base,
         buttonVariantStyle,
@@ -118,8 +124,8 @@ export const Button: React.FC<ButtonProps> = ({
         <ActivityIndicator color={textColor} size="small" />
       ) : (
         <View style={baseStyles.contentRow}>
-          {leftIcon ? <View style={baseStyles.leftIconContainer}>{leftIcon}</View> : null}
-          {title ? (
+          {resolvedLeftIcon ? <View style={baseStyles.leftIconContainer}>{resolvedLeftIcon}</View> : null}
+          {displayTitle ? (
             <Text
               style={[
                 textStyles.textBase,
@@ -128,7 +134,7 @@ export const Button: React.FC<ButtonProps> = ({
                 textStyle,
               ]}
             >
-              {title}
+              {displayTitle}
             </Text>
           ) : null}
           {children}

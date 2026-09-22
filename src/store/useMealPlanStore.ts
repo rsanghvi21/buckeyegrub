@@ -417,12 +417,16 @@ export const useMealPlanStore = create<MealPlanStore>()(
 
       saveCurrentPlan: (name: string, description?: string, tags: string[] = []): SavedMealPlan => {
         const currentPlan = get().activePlan;
+        const planClone = JSON.parse(JSON.stringify(currentPlan));
+        if (name.trim()) {
+          planClone.title = name.trim();
+        }
         const savedPlan: SavedMealPlan = {
           id: `saved_plan_${Date.now()}`,
           name: name.trim() || `Plan for ${currentPlan.date}`,
           description,
           tags,
-          plan: JSON.parse(JSON.stringify(currentPlan)),
+          plan: planClone,
           savedAt: new Date().toISOString(),
         };
 
