@@ -148,16 +148,19 @@ export const getThemeColors = (isDark: boolean) => ({
   ...(isDark ? darkSemanticColors : lightSemanticColors),
 });
 
+const fontSizes = {
+  xs: 11,
+  sm: 13,
+  md: 15,
+  lg: 17,
+  xl: 20,
+  xxl: 24,
+  xxxl: 32,
+} as const;
+
 export const typography = {
-  sizes: {
-    xs: 11,
-    sm: 13,
-    md: 15,
-    lg: 17,
-    xl: 20,
-    xxl: 24,
-    xxxl: 32,
-  },
+  sizes: fontSizes,
+  fontSizes: fontSizes,
   lineHeights: {
     xs: 15,
     sm: 18,
