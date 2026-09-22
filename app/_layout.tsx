@@ -15,6 +15,10 @@ export default function RootLayout() {
           }}
         >
           <Stack.Screen name="index" />
+          <Stack.Screen
+            name="modal/grubhub-assistant"
+            options={{ presentation: 'modal' }}
+          />
         </Stack>
       </SafeAreaProvider>
     </GestureHandlerRootView>
