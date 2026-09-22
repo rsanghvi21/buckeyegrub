@@ -126,15 +126,16 @@
   - One-tap **"Copy Customization"** to clipboard with haptic/visual feedback.
   - Macro summary card (Calories, Protein, Carbs, Fat).
   - **"Open Grubhub to Order"** action button.
-- **Gate 6 Acceptance Criteria**: [PASSED] Tapping order launches Grubhub link (native `grubhub://` deep link with graceful `https://` web fallback); customization copies cleanly to clipboard via `expo-clipboard`. 58 automated verification assertions passed across all 12 Grubhub-mapped venues; `npx tsc --noEmit` clean; Expo web bundle exported successfully (3172 modules).
+- **Gate 6 Acceptance Criteria**: [PASSED] Tapping order launches Grubhub link (native `grubhub://` deep link with graceful `https://` web fallback); customization copies cleanly to clipboard via `expo-clipboard` with `expo-haptics` feedback. 64 automated verification assertions passed across all 12 Grubhub-mapped venues; `npx tsc --noEmit` clean; Expo web bundle exported successfully (3177 modules).
 - **Implementation Notes**:
-  - `deepLinkService.ts` exposes pure, testable URL builders (`buildGrubhubWebUrl`, `buildGrubhubAppUri`) plus `openVenueOrder`, which lazy-imports `expo-linking` so the builders remain runnable in non-native verification contexts and never throw.
-  - Order Assistant modal accepts `venueId` (required) and optional `slot` route params; it renders the active meal-plan slot when present, otherwise falls back to the venue's catalog items.
+  - `deepLinkService.ts` exposes pure, testable URL builders (`buildGrubhubWebUrl`, `buildGrubhubAppUri`) accepting either a `DiningVenue` or standalone slug string, plus `openVenueOrder`, which wraps `expo-linking` in a zero-crash linking contract.
+  - Order Assistant modal accepts `venueId` (required) and optional `slot` route params; it filters the active meal-plan slot to the target venue, otherwise falls back to the venue's catalog items. Supports dynamic dark/light mode themes and haptic feedback via `expo-haptics`.
   - Modal route registered in `app/_layout.tsx` with `presentation: 'modal'`; launched from the showcase screen's "Assistant" button.
-  - Added dependency: `expo-clipboard@~57.0.2`.
-  - Verifier: `src/services/grubhub/__tests__/verifyDeepLink.ts` (run manually — see repo convention for the `__tests__/verify*.ts` scripts).
+  - Added dependencies: `expo-clipboard@~57.0.2`, `expo-haptics@~57.0.3`.
+  - Verifier: `src/services/grubhub/__tests__/verifyDeepLink.ts` (run via `npx tsx src/services/grubhub/__tests__/verifyDeepLink.ts`).
 - **Commit History**:
   - `25130cf` (2026-09-22T11:18:30-04:00): `feat(grubhub): implement checkpoint 6 - grubhub deep-link & order assistant`
+  - `b40f5e1` (2026-09-22T12:41:30-04:00): `fix(grubhub): remediate code review findings for Checkpoint 6 (standards & spec)`
 
 ---
 
