@@ -167,13 +167,16 @@
   - [x] API Key settings for Gemini / OpenAI.
 - [x] Nutrition Modal Sheet (`app/modal/meal-details.tsx`):
   - [x] Comprehensive nutrition facts table (calories, protein, carbs, fat, fiber, sodium, allergens).
-- **Gate 7 Acceptance Criteria**: [PASSED] All 5 tabs and modals render seamlessly; navigation flows operate without lag or layout shifts; 10/10 automated assertions passed in `src/__tests__/verifyCheckpoint7.ts`; zero regressions across 260+ tests in state, catalog, and Grubhub suites; `npx tsc --noEmit` clean with 0 errors; Expo web bundle exported cleanly with 3,186 modules.
+- **Gate 7 Acceptance Criteria**: [PASSED] All 5 tabs and modals render seamlessly; navigation flows operate without lag or layout shifts; 11/11 automated assertions passed in `src/__tests__/verifyCheckpoint7.ts`; zero regressions across 260+ tests in state, catalog, and Grubhub suites; `npx tsc --noEmit` clean with 0 errors; Expo web bundle exported cleanly with 3,186 modules.
 - **Implementation Notes**:
   - Implemented on branch `feat/checkpoint-7-core-screens`.
   - Replaced legacy showcase screen `app/index.tsx` with production Expo Router pathless group architecture in `app/(tabs)/index.tsx`.
   - Added `src/context/ThemeContext.tsx` providing reactive Light/Dark theming synchronized with `useUserStore` and device appearance.
   - Added pure nutrition calculation engine in `src/utils/nutrition.ts` (Mifflin-St Jeor BMR, TDEE activity scaling, goal-based macro distribution, dynamic Buckeye Power Score).
   - Verifier: `src/__tests__/verifyCheckpoint7.ts` (run via `npx tsx src/__tests__/verifyCheckpoint7.ts`).
+- **Commit History**:
+  - `dba63f0` (2026-09-22T18:13:58-04:00): `feat(screens): implement checkpoint 7 - core screens & user experience (expo router)`
+  - `844a542` (2026-09-22T19:03:20-04:00): `fix(screens): remediate code review findings for Checkpoint 7`
 
 ---
 
