@@ -134,7 +134,7 @@
   - Added dependency: `expo-clipboard@~57.0.2`.
   - Verifier: `src/services/grubhub/__tests__/verifyDeepLink.ts` (run manually — see repo convention for the `__tests__/verify*.ts` scripts).
 - **Commit History**:
-  - `1f32012` (2026-09-22T11:18:17-04:00): `feat(grubhub): implement checkpoint 6 - grubhub deep-link & order assistant`
+  - `25130cf` (2026-09-22T11:18:30-04:00): `feat(grubhub): implement checkpoint 6 - grubhub deep-link & order assistant`
 
 ---
 
