@@ -6,6 +6,8 @@ import {
   Text,
   View,
 } from 'react-native';
+import { useRouter } from 'expo-router';
+import type { Href } from 'expo-router';
 import {
   Flame,
   RotateCcw,
@@ -28,6 +30,7 @@ import { colors, radii, spacing, typography } from '@/src/constants/theme';
 import { useDiningStore, useMealPlanStore, useUserStore } from '@/src/store';
 
 export default function HomeScreen() {
+  const router = useRouter();
   const { profile, resetToDemo: resetUserDemo } = useUserStore();
   const {
     activePlan,
@@ -213,6 +216,11 @@ export default function HomeScreen() {
               variant="secondary"
               size="sm"
               leftIcon={<Sparkles size={15} color={colors.textPrimary} />}
+              onPress={() =>
+                router.push(
+                  '/modal/grubhub-assistant?venueId=traditions-at-scott&slot=dinner' as Href
+                )
+              }
               style={styles.flexButton}
             />
           </View>
