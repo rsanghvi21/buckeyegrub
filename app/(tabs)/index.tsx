@@ -324,9 +324,9 @@ export default function DashboardScreen() {
                   icon={isLogged ? <CheckCircle2 size={16} color={theme.scarlet} /> : undefined}
                 />
 
-                {venue && (
+                {venue ? (
                   <Button
-                    label="Order via Grubhub"
+                    label={`Order at ${venue.shortName || venue.name}`}
                     variant="outline"
                     size="sm"
                     onPress={() =>
@@ -336,6 +336,14 @@ export default function DashboardScreen() {
                       } as any)
                     }
                     icon={<ExternalLink size={14} color={theme.scarlet} />}
+                  />
+                ) : (
+                  <Button
+                    label="Order via Grubhub"
+                    variant="outline"
+                    size="sm"
+                    disabled
+                    icon={<ExternalLink size={14} color={theme.grayMuted} />}
                   />
                 )}
               </View>

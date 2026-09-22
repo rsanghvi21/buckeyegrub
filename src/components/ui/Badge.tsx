@@ -72,9 +72,9 @@ export const Badge: React.FC<BadgeProps> = ({
         };
       case 'success':
         return {
-          bg: '#EBFBEE',
-          text: '#2B8A3E',
-          border: '#8CE99A',
+          bg: colors.payment.diningDollars.bg,
+          text: colors.success,
+          border: colors.payment.diningDollars.border,
         };
       case 'dietary':
       case 'high-protein':

@@ -29,10 +29,9 @@ import {
 import { Header } from '@/src/components/navigation/Header';
 import { BuckeyeLeaf } from '@/src/components/navigation/BuckeyeLeaf';
 import { Badge, Button, Card } from '@/src/components/ui';
-import { radii, spacing, typography } from '@/src/constants/theme';
+import { DIETARY_TAG_OPTIONS, DietaryTag, radii, spacing, typography } from '@/src/constants/theme';
 import { useTheme } from '@/src/context';
 import { useMealPlanStore, useUserStore } from '@/src/store';
-import { DietaryTag } from '@/src/constants/theme';
 import { FitnessGoal } from '@/src/types/user';
 import {
   ACTIVITY_LABELS,
@@ -47,15 +46,6 @@ const GOAL_OPTIONS: { id: FitnessGoal; label: string; desc: string }[] = [
   { id: 'bulk', label: 'Muscle Gain (Bulk)', desc: 'Caloric surplus with high carbohydrate foundation' },
   { id: 'cut', label: 'Fat Loss (Cut)', desc: 'High-protein caloric deficit preserving muscle' },
   { id: 'maintain', label: 'Maintenance', desc: 'Sustained energy and weight equilibrium' },
-];
-
-const DIETARY_OPTIONS: { tag: DietaryTag; label: string }[] = [
-  { tag: 'highProtein', label: 'High-Protein' },
-  { tag: 'vegan', label: 'Vegan' },
-  { tag: 'vegetarian', label: 'Vegetarian' },
-  { tag: 'glutenFree', label: 'Gluten-Free' },
-  { tag: 'halal', label: 'Halal' },
-  { tag: 'dairyFree', label: 'Dairy-Free' },
 ];
 
 export default function ProfileScreen() {
@@ -523,7 +513,7 @@ export default function ProfileScreen() {
         </View>
 
         <View style={styles.dietaryRow}>
-          {DIETARY_OPTIONS.map((item) => {
+          {DIETARY_TAG_OPTIONS.map((item) => {
             const isSelected = profile.dietaryRestrictions.includes(item.tag);
             return (
               <Pressable

@@ -23,20 +23,11 @@ import { Header } from '@/src/components/navigation/Header';
 import { Badge, Button, Card } from '@/src/components/ui';
 import { radii, spacing, typography } from '@/src/constants/theme';
 import { useTheme } from '@/src/context';
-import { OSU_MENU_ITEMS_BY_VENUE, OSU_VENUES } from '@/src/data';
+import { OSU_MENU_ITEMS_BY_VENUE, OSU_MENU_ITEMS_MAP, OSU_VENUES } from '@/src/data';
 import { useDiningStore, useMealPlanStore } from '@/src/store';
 import { CampusZone, PaymentType, calculateDiningDollarDiscount } from '@/src/types/dining';
-import { DietaryTag } from '@/src/constants/theme';
+import { DIETARY_TAG_OPTIONS, DietaryTag } from '@/src/constants/theme';
 import { MealSlotType } from '@/src/types/mealPlan';
-
-const DIETARY_TAG_OPTIONS: { tag: DietaryTag; label: string }[] = [
-  { tag: 'highProtein', label: 'High-Protein' },
-  { tag: 'vegan', label: 'Vegan' },
-  { tag: 'vegetarian', label: 'Vegetarian' },
-  { tag: 'glutenFree', label: 'Gluten-Free' },
-  { tag: 'halal', label: 'Halal' },
-  { tag: 'dairyFree', label: 'Dairy-Free' },
-];
 
 export default function MenusScreen() {
   const router = useRouter();
@@ -56,7 +47,7 @@ export default function MenusScreen() {
 
   // Expanded venue cards map
   const [expandedVenues, setExpandedVenues] = useState<Record<string, boolean>>({
-    'traditions-scott': true, // Scott expanded by default
+    'traditions-at-scott': true, // Scott expanded by default
   });
 
   // Slot selector modal state for quick adding
@@ -412,9 +403,7 @@ export default function MenusScreen() {
                   variant="outline"
                   size="sm"
                   onPress={() => {
-                    const item = Object.values(OSU_MENU_ITEMS_BY_VENUE)
-                      .flat()
-                      .find((i) => i.id === addingItem.id);
+                    const item = OSU_MENU_ITEMS_MAP[addingItem.id];
                     if (item) {
                       handleQuickAdd(item, slot);
                     }

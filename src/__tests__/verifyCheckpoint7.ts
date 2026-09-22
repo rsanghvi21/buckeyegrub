@@ -36,7 +36,13 @@ import {
   OSU_VENUES_MAP,
 } from '../data';
 import { calculateDiningDollarDiscount } from '../types/dining';
-import { getThemeColors, palette, lightSemanticColors, darkSemanticColors } from '../constants/theme';
+import {
+  getThemeColors,
+  palette,
+  lightSemanticColors,
+  darkSemanticColors,
+  DIETARY_TAG_OPTIONS,
+} from '../constants/theme';
 import { useUserStore } from '../store/useUserStore';
 import { useMealPlanStore } from '../store/useMealPlanStore';
 import { useDiningStore } from '../store/useDiningStore';
@@ -273,6 +279,21 @@ it('verifies chat store message and demo resets', () => {
   assert.ok(chatStore.messages.length > 0, 'Demo chat has seeded messages');
   assert.strictEqual(chatStore.isLoading, false);
   assert.strictEqual(chatStore.isGeneratingPlan, false);
+});
+
+it('verifies centralized DIETARY_TAG_OPTIONS and venue ID fidelity', () => {
+  assert.strictEqual(DIETARY_TAG_OPTIONS.length, 6, 'Must have 6 dietary options');
+  const tags = DIETARY_TAG_OPTIONS.map((d) => d.tag);
+  assert.ok(tags.includes('highProtein'));
+  assert.ok(tags.includes('vegan'));
+  assert.ok(tags.includes('vegetarian'));
+  assert.ok(tags.includes('glutenFree'));
+  assert.ok(tags.includes('halal'));
+  assert.ok(tags.includes('dairyFree'));
+
+  // Verify Scott Traditions venue ID
+  assert.ok(OSU_VENUES_MAP['traditions-at-scott'], 'traditions-at-scott must exist');
+  assert.strictEqual(OSU_VENUES_MAP['traditions-at-scott'].name, 'Traditions at Scott');
 });
 
 console.log(`\nAll ${passedAssertions} Checkpoint 7 automated assertions PASSED successfully!`);

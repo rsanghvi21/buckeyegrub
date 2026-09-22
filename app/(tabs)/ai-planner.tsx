@@ -1,6 +1,7 @@
 import React, { useRef, useState } from 'react';
 import {
   ActivityIndicator,
+  Alert,
   KeyboardAvoidingView,
   Platform,
   Pressable,
@@ -27,7 +28,7 @@ import {
 import { Header } from '@/src/components/navigation/Header';
 import { BuckeyeLeaf } from '@/src/components/navigation/BuckeyeLeaf';
 import { Badge, Button, Card } from '@/src/components/ui';
-import { radii, spacing, typography } from '@/src/constants/theme';
+import { palette, radii, spacing, typography } from '@/src/constants/theme';
 import { useTheme } from '@/src/context';
 import { useChatStore, useMealPlanStore, useUserStore } from '@/src/store';
 import { CampusZone } from '@/src/types/dining';
@@ -46,25 +47,25 @@ const PRESETS: PresetOption[] = [
     id: 'post_rpac',
     title: 'Post-RPAC Chest Day',
     subtitle: 'Max protein surplus to fuel muscle recovery',
-    icon: <Dumbbell size={20} color="#BA0C2F" />,
+    icon: <Dumbbell size={20} color={palette.scarlet} />,
   },
   {
     id: 'cut_lean',
     title: 'Cut & Lean',
     subtitle: 'High-satiety calorie deficit with lean campus picks',
-    icon: <TrendingDown size={20} color="#BA0C2F" />,
+    icon: <TrendingDown size={20} color={palette.scarlet} />,
   },
   {
     id: 'budget_day',
-    title: 'Budget & Swipes',
+    title: 'Budget Day',
     subtitle: 'Prioritizes Traditions Swipes & lowest cost items',
-    icon: <PiggyBank size={20} color="#BA0C2F" />,
+    icon: <PiggyBank size={20} color={palette.scarlet} />,
   },
   {
     id: 'bulk_power',
     title: 'Bulk & Power',
     subtitle: 'Calorie dense, high-carb athletic fuel',
-    icon: <Zap size={20} color="#BA0C2F" />,
+    icon: <Zap size={20} color={palette.scarlet} />,
   },
 ];
 
@@ -113,6 +114,12 @@ export default function AIPlannerScreen() {
       setGeneratedPlan(plan);
     } catch (e) {
       console.error('Plan generation failed:', e);
+      Alert.alert(
+        'BrutusAI Planning Notice',
+        e instanceof Error
+          ? e.message
+          : 'Brutus was unable to complete plan generation. Offline fallback engaged.'
+      );
     }
   };
 

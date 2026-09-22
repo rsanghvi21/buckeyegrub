@@ -2,7 +2,7 @@ import React from 'react';
 import { Tabs } from 'expo-router';
 import { StyleSheet, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { Home, Sparkles, Utensils, Star, User } from 'lucide-react-native';
+import { Home, Bot, Utensils, Star, User } from 'lucide-react-native';
 import { useTheme } from '@/src/context';
 import { typography } from '@/src/constants/theme';
 
@@ -46,7 +46,7 @@ export default function TabLayout() {
         options={{
           title: 'BrutusAI',
           tabBarLabel: 'BrutusAI',
-          tabBarIcon: ({ color, size }) => <Sparkles size={size ?? 22} color={color} />,
+          tabBarIcon: ({ color, size }) => <Bot size={size ?? 22} color={color} />,
         }}
       />
       <Tabs.Screen
