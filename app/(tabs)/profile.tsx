@@ -26,11 +26,13 @@ import {
   Sun,
   User,
 } from 'lucide-react-native';
+import { useRouter } from 'expo-router';
 import { Header } from '@/src/components/navigation/Header';
 import { BuckeyeLeaf } from '@/src/components/navigation/BuckeyeLeaf';
 import { Badge, Button, Card } from '@/src/components/ui';
+import { StreakMilestoneCard } from '@/src/components/gamification/StreakMilestoneCard';
 import { DIETARY_TAG_OPTIONS, DietaryTag, radii, spacing, typography } from '@/src/constants/theme';
-import { useTheme } from '@/src/context';
+import { useTheme, useToast } from '@/src/context';
 import { useMealPlanStore, useUserStore } from '@/src/store';
 import { FitnessGoal } from '@/src/types/user';
 import {
@@ -40,6 +42,9 @@ import {
   calculateSuggestedMacros,
   calculateTdee,
 } from '@/src/utils/nutrition';
+import { hapticSelection } from '@/src/utils/haptics';
+import { calculatePurchasingPower } from '@/src/utils/diningDiscount';
+
 
 const GOAL_OPTIONS: { id: FitnessGoal; label: string; desc: string }[] = [
   { id: 'athletic', label: 'Athletic', desc: 'Balanced macros for peak campus & club performance' },
@@ -49,7 +54,10 @@ const GOAL_OPTIONS: { id: FitnessGoal; label: string; desc: string }[] = [
 ];
 
 export default function ProfileScreen() {
+  const router = useRouter();
+  const { showToast } = useToast();
   const { theme, isDark, themeMode, setThemeMode } = useTheme();
+
   const {
     profile,
     updateProfile,
@@ -181,22 +189,53 @@ export default function ProfileScreen() {
                 {profile.email || 'buckeye.1@osu.edu'}
               </Text>
               <View style={styles.userBadgesRow}>
-                <Badge
-                  label={`${profile.streakDays}d Streak`}
-                  variant="scarlet"
-                  size="sm"
-                  icon={<BuckeyeLeaf size={12} color={theme.scarlet} />}
-                />
-                <Badge
-                  label={`${profile.powerScore} Power Score`}
-                  variant="gold"
-                  size="sm"
-                  icon={<Award size={12} color={theme.goldDark} />}
-                />
+                <Pressable
+                  onPress={async () => {
+                    await hapticSelection();
+                    showToast({
+                      message: `Current streak: ${profile.streakDays} days! Keep logging daily meals to maintain your streak. 🌰`,
+                      type: 'scarlet',
+                    });
+                  }}
+                  style={({ pressed }) => pressed && { opacity: 0.8 }}
+                >
+                  <Badge
+                    label={`${profile.streakDays}d Streak`}
+                    variant="scarlet"
+                    size="sm"
+                    icon={<BuckeyeLeaf size={12} color={theme.scarlet} />}
+                  />
+                </Pressable>
+                <Pressable
+                  onPress={async () => {
+                    await hapticSelection();
+                    router.push('/modal/power-score' as any);
+                  }}
+                  style={({ pressed }) => pressed && { opacity: 0.8 }}
+                >
+                  <Badge
+                    label={`${profile.powerScore} Power Score`}
+                    variant="gold"
+                    size="sm"
+                    icon={<Award size={12} color={theme.goldDark} />}
+                  />
+                </Pressable>
               </View>
             </View>
           </View>
         </Card>
+
+        {/* Buckeye Streak & Milestone Badges Tracker */}
+        <StreakMilestoneCard
+          streakDays={profile.streakDays}
+          lastActiveDate={profile.lastActiveDate}
+          onPressBadge={(m) => {
+            showToast({
+              message: `${m.title}: ${m.description} (${m.isUnlocked ? 'Unlocked! 🏆' : `${m.daysRemaining} days left`})`,
+              type: m.isUnlocked ? 'gold' : 'info',
+            });
+          }}
+        />
 
         {/* Section 1: Fitness Goal Selector */}
         <View style={styles.sectionHeader}>
@@ -503,6 +542,31 @@ export default function ProfileScreen() {
               >
                 <Text style={{ color: theme.textPrimary, fontWeight: '700' }}>+25</Text>
               </Pressable>
+            </View>
+          </View>
+
+          {/* Dining Dollar Purchasing Power & Calculator Shortcut */}
+          <View
+            style={{
+              marginTop: spacing.md,
+              padding: spacing.sm,
+              borderRadius: radii.sm,
+              backgroundColor: isDark ? '#1C2E20' : '#EBFBEE',
+              borderWidth: 1,
+              borderColor: theme.success,
+            }}
+          >
+            <Text style={{ fontSize: typography.fontSizes.xs, fontWeight: '700', color: theme.success }}>
+              💡 35% Dining $ Purchasing Power: ${calculatePurchasingPower(profile.balances.diningDollars).toFixed(2)} in retail food value
+            </Text>
+            <View style={{ marginTop: spacing.xs, flexDirection: 'row', justifyContent: 'flex-end' }}>
+              <Button
+                label="Open 35% Calculator"
+                variant="outline"
+                size="sm"
+                onPress={() => router.push('/modal/discount-calculator' as any)}
+                icon={<Calculator size={14} color={theme.success} />}
+              />
             </View>
           </View>
         </Card>

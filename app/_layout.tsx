@@ -4,7 +4,7 @@ import { StatusBar } from 'expo-status-bar';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { StyleSheet } from 'react-native';
-import { ThemeProvider, useTheme } from '@/src/context';
+import { ThemeProvider, ToastProvider, useTheme } from '@/src/context';
 
 function RootNavigator() {
   const { isDark } = useTheme();
@@ -26,6 +26,14 @@ function RootNavigator() {
           name="modal/meal-details"
           options={{ presentation: 'modal', headerShown: false }}
         />
+        <Stack.Screen
+          name="modal/power-score"
+          options={{ presentation: 'modal', headerShown: false }}
+        />
+        <Stack.Screen
+          name="modal/discount-calculator"
+          options={{ presentation: 'modal', headerShown: false }}
+        />
       </Stack>
     </>
   );
@@ -36,7 +44,9 @@ export default function RootLayout() {
     <GestureHandlerRootView style={styles.container}>
       <SafeAreaProvider>
         <ThemeProvider>
-          <RootNavigator />
+          <ToastProvider>
+            <RootNavigator />
+          </ToastProvider>
         </ThemeProvider>
       </SafeAreaProvider>
     </GestureHandlerRootView>

@@ -127,40 +127,135 @@ export function calculateSuggestedMacros(
   };
 }
 
+export type PowerScoreTier = 'Freshman' | 'Buckeye Starter' | 'RPAC Beast' | 'Campus Legend';
+
+export interface PowerScoreBreakdown {
+  totalScore: number;
+  proteinScore: number; // max 50
+  calorieScore: number; // max 40
+  loggingScore: number; // max 10
+  tier: PowerScoreTier;
+  tierColor: string;
+  proteinRatio: number;
+  calorieRatio: number;
+  loggedSlotsCount: number;
+  coachingTip: string;
+}
+
 /**
  * Calculates the Buckeye Power Score (0–100) based on nutritional adherence.
  * Factors in protein goal completion (50% weight), calorie adherence (40% weight),
- * and logging consistency (10% base).
+ * and meal logging consistency (10% weight).
  */
 export function calculatePowerScore(
   loggedTotals: { calories: number; macros: Pick<MacroNutrients, 'protein' | 'carbs' | 'fat'> },
   targetCalories: number,
-  targetMacros: MacroTargets
+  targetMacros: MacroTargets,
+  loggedSlotsCount?: number
 ): number {
+  return calculatePowerScoreBreakdown(loggedTotals, targetCalories, targetMacros, loggedSlotsCount).totalScore;
+}
+
+/**
+ * Generates an itemized breakdown of the Buckeye Power Score with component points,
+ * tier classification, and Brutus coaching tips.
+ */
+export function calculatePowerScoreBreakdown(
+  loggedTotals: { calories: number; macros: Pick<MacroNutrients, 'protein' | 'carbs' | 'fat'> },
+  targetCalories: number,
+  targetMacros: MacroTargets,
+  loggedSlotsCount?: number
+): PowerScoreBreakdown {
   if (targetCalories <= 0 || targetMacros.protein <= 0) {
-    return 50;
+    return {
+      totalScore: 50,
+      proteinScore: 25,
+      calorieScore: 20,
+      loggingScore: 5,
+      tier: 'Buckeye Starter',
+      tierColor: '#2B8A3E',
+      proteinRatio: 0.5,
+      calorieRatio: 0.5,
+      loggedSlotsCount: loggedSlotsCount ?? 0,
+      coachingTip: 'Set your calorie and macro targets in Profile to get an accurate Buckeye Power Score!',
+    };
   }
 
-  // Protein adherence: 0 to 1.0 capped at 1.15
+  // Protein adherence: up to 50 points
   const proteinRatio = loggedTotals.macros.protein / targetMacros.protein;
-  const proteinScore = Math.min(1.0, proteinRatio) * 50;
+  const proteinScore = Math.min(1.0, Math.max(0, proteinRatio)) * 50;
 
-  // Calorie adherence: optimal is 90% to 105% of target
+  // Calorie adherence: up to 40 points
   const calRatio = loggedTotals.calories / targetCalories;
-  let calScore = 0;
+  let calorieScore = 0;
   if (calRatio <= 1.0) {
-    calScore = calRatio * 40;
+    calorieScore = Math.max(0, calRatio) * 40;
   } else if (calRatio <= 1.15) {
-    calScore = 40;
+    calorieScore = 40;
   } else {
     // Slight penalty for exceeding calories by > 15%
     const overage = calRatio - 1.15;
-    calScore = Math.max(10, 40 - overage * 80);
+    calorieScore = Math.max(10, 40 - overage * 80);
   }
 
-  // Logging base bonus
-  const loggingBonus = loggedTotals.calories > 0 ? 10 : 0;
+  // Logging consistency: up to 10 points
+  let loggingScore = 0;
+  let resolvedSlotCount = loggedSlotsCount ?? 0;
+  if (loggedSlotsCount !== undefined) {
+    loggingScore = Math.min(10, Math.max(0, resolvedSlotCount * 2.5));
+  } else {
+    loggingScore = loggedTotals.calories > 0 ? 10 : 0;
+    resolvedSlotCount = loggedTotals.calories > 0 ? 1 : 0;
+  }
 
-  const totalScore = Math.round(proteinScore + calScore + loggingBonus);
-  return Math.min(100, Math.max(0, totalScore));
+  const rawTotal = proteinScore + calorieScore + loggingScore;
+  const totalScore = Math.min(100, Math.max(0, Math.round(rawTotal)));
+
+  // Tier classification
+  let tier: PowerScoreTier = 'Freshman';
+  let tierColor = '#666666';
+
+  if (totalScore >= 90) {
+    tier = 'Campus Legend';
+    tierColor = '#BA0C2F'; // OSU Scarlet
+  } else if (totalScore >= 75) {
+    tier = 'RPAC Beast';
+    tierColor = '#D4AF37'; // Gold
+  } else if (totalScore >= 50) {
+    tier = 'Buckeye Starter';
+    tierColor = '#2B8A3E'; // Emerald Green
+  } else {
+    tier = 'Freshman';
+    tierColor = '#666666'; // Buckeye Gray
+  }
+
+  // Contextual Brutus coaching tips
+  let coachingTip = 'Keep logging meals consistently to build your Buckeye Power Score!';
+  if (loggedTotals.calories === 0) {
+    coachingTip = 'Start your day by logging breakfast at Scott Traditions or Curl Market!';
+  } else if (totalScore >= 90) {
+    coachingTip = 'Incredible discipline! You are fueling at Varsity Buckeye level. Go Bucks!';
+  } else if (proteinRatio < 0.6) {
+    coachingTip = 'Fuel up on protein! Grab grilled chicken at Curl Market or chocolate milk post-RPAC.';
+  } else if (calRatio > 1.15) {
+    coachingTip = 'You have reached your calorie ceiling. Balance it out with an evening walk near Mirror Lake.';
+  } else if (calRatio < 0.5) {
+    coachingTip = 'You are under 50% of your energy target. Do not forget to fuel before your library study session!';
+  } else if (totalScore >= 75) {
+    coachingTip = 'Solid fuel strategy today! One more balanced meal will push you into Campus Legend tier.';
+  }
+
+  return {
+    totalScore,
+    proteinScore: Math.round(proteinScore * 10) / 10,
+    calorieScore: Math.round(calorieScore * 10) / 10,
+    loggingScore: Math.round(loggingScore * 10) / 10,
+    tier,
+    tierColor,
+    proteinRatio: Math.round(proteinRatio * 100) / 100,
+    calorieRatio: Math.round(calRatio * 100) / 100,
+    loggedSlotsCount: resolvedSlotCount,
+    coachingTip,
+  };
 }
+

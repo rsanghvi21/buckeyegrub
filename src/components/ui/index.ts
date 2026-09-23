@@ -5,3 +5,5 @@ export { Badge, BadgeProps, BadgeVariant, BadgeSize } from './Badge';
 export { Input, InputProps } from './Input';
 export { MacroRing, MacroRingProps } from './MacroRing';
 export { ProgressBar, ProgressBarProps } from './ProgressBar';
+export { Toast, ToastProps, ToastType } from './Toast';
+
