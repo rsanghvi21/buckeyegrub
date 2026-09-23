@@ -226,7 +226,7 @@ export default function DashboardScreen() {
               style={({ pressed }) => [
                 styles.savingsBanner,
                 {
-                  backgroundColor: isDark ? '#1C2E20' : '#EBFBEE',
+                  backgroundColor: theme.savingsWash,
                   borderColor: theme.success,
                 },
                 pressed && { opacity: 0.8 },

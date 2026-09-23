@@ -128,6 +128,7 @@ export function calculateSuggestedMacros(
 }
 
 export type PowerScoreTier = 'Freshman' | 'Buckeye Starter' | 'RPAC Beast' | 'Campus Legend';
+export type PowerScoreTierVariant = 'scarlet' | 'gold' | 'success' | 'default';
 
 export interface PowerScoreBreakdown {
   totalScore: number;
@@ -135,6 +136,7 @@ export interface PowerScoreBreakdown {
   calorieScore: number; // max 40
   loggingScore: number; // max 10
   tier: PowerScoreTier;
+  tierVariant: PowerScoreTierVariant;
   tierColor: string;
   proteinRatio: number;
   calorieRatio: number;
@@ -173,6 +175,7 @@ export function calculatePowerScoreBreakdown(
       calorieScore: 20,
       loggingScore: 5,
       tier: 'Buckeye Starter',
+      tierVariant: 'success',
       tierColor: '#2B8A3E',
       proteinRatio: 0.5,
       calorieRatio: 0.5,
@@ -181,9 +184,14 @@ export function calculatePowerScoreBreakdown(
     };
   }
 
-  // Protein adherence: up to 50 points
-  const proteinRatio = loggedTotals.macros.protein / targetMacros.protein;
-  const proteinScore = Math.min(1.0, Math.max(0, proteinRatio)) * 50;
+  // Protein adherence: up to 50 points (±10% target buffer awards full 50 pts at >= 90%)
+  const proteinRatio = targetMacros.protein > 0 ? loggedTotals.macros.protein / targetMacros.protein : 0;
+  let proteinScore = 0;
+  if (proteinRatio >= 0.90) {
+    proteinScore = 50;
+  } else {
+    proteinScore = Math.min(50, Math.max(0, (proteinRatio / 0.90) * 50));
+  }
 
   // Calorie adherence: up to 40 points
   const calRatio = loggedTotals.calories / targetCalories;
@@ -213,19 +221,24 @@ export function calculatePowerScoreBreakdown(
 
   // Tier classification
   let tier: PowerScoreTier = 'Freshman';
+  let tierVariant: PowerScoreTierVariant = 'default';
   let tierColor = '#666666';
 
   if (totalScore >= 90) {
     tier = 'Campus Legend';
+    tierVariant = 'scarlet';
     tierColor = '#BA0C2F'; // OSU Scarlet
   } else if (totalScore >= 75) {
     tier = 'RPAC Beast';
+    tierVariant = 'gold';
     tierColor = '#D4AF37'; // Gold
   } else if (totalScore >= 50) {
     tier = 'Buckeye Starter';
+    tierVariant = 'success';
     tierColor = '#2B8A3E'; // Emerald Green
   } else {
     tier = 'Freshman';
+    tierVariant = 'default';
     tierColor = '#666666'; // Buckeye Gray
   }
 
@@ -251,6 +264,7 @@ export function calculatePowerScoreBreakdown(
     calorieScore: Math.round(calorieScore * 10) / 10,
     loggingScore: Math.round(loggingScore * 10) / 10,
     tier,
+    tierVariant,
     tierColor,
     proteinRatio: Math.round(proteinRatio * 100) / 100,
     calorieRatio: Math.round(calRatio * 100) / 100,

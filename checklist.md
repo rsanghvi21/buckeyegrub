@@ -185,19 +185,22 @@
 - [x] Implement **Buckeye Leaf Streak Tracker** with milestone badges (3-day, 7-day, 14-day streaks).
 - [x] Implement BuckID Dining Dollar 35% discount calculator badge on retail venues.
 - [x] Add smooth micro-interactions (press effects, toast notifications, haptics on mobile).
-- **Gate 8 Acceptance Criteria**: [PASSED] Logging meals increases power score and dynamically updates user profile; consecutive day logging increments streak with idempotent same-day handling; milestone badges unlock at 3, 7, 14, and 30 days; 35% Dining Dollar discount tags, dollar savings, and retail purchasing power calculate with penny accuracy; global animated Toast provider and safe haptics active across all screens; 19/19 automated assertions passed in `src/__tests__/verifyCheckpoint8.ts`; zero regressions across 270+ tests in state, catalog, deep-linking, and AI suites; clean TypeScript compilation (`npx tsc --noEmit`); clean Expo web bundle export (3,195 modules).
+- **Gate 8 Acceptance Criteria**: [PASSED] Logging meals increases power score and dynamically updates user profile; consecutive day logging increments streak with idempotent same-day handling; milestone badges unlock at 3, 7, 14, and 30 days; 35% Dining Dollar discount tags, dollar savings, and retail purchasing power calculate with penny accuracy; global animated Toast provider and safe haptics active across all screens; 22/22 automated assertions passed in `src/__tests__/verifyCheckpoint8.ts`; zero regressions across Checkpoint 7 and state suites; clean TypeScript compilation (`npx tsc --noEmit`); clean Expo web bundle export (3,196 modules).
 - **Implementation Notes**:
   - Implemented on dedicated branch `feat/checkpoint-8-gamification-polish`.
-  - Added pure nutrition breakdown engine in `src/utils/nutrition.ts` (`calculatePowerScoreBreakdown`) itemizing protein (50 pts), calories (40 pts), logging (10 pts), tier (*"Campus Legend"*, *"RPAC Beast"*, *"Buckeye Starter"*, *"Freshman"*), and Brutus coaching tips.
-  - Added gamification engine in `src/utils/gamification.ts` tracking 3-day (*"Freshman Kickoff"*), 7-day (*"Varsity Starter"*), 14-day (*"Gold Pants Champion"*), and 30-day (*"Campus Legend"*) badges with progress percentages and calendar transitions.
+  - Added pure nutrition breakdown engine in `src/utils/nutrition.ts` (`calculatePowerScoreBreakdown`) itemizing protein (50 pts with ±10% adherence window), calories (40 pts), logging (10 pts), tier (*"Campus Legend"*, *"RPAC Beast"*, *"Buckeye Starter"*, *"Freshman"*), and Brutus coaching tips.
+  - Added gamification engine in `src/utils/gamification.ts` tracking 3-day (*"Freshman Kickoff"*), 7-day (*"Varsity Starter"*), 14-day (*"Gold Pants Champion"*), and 30-day (*"Campus Legend"*) badges with progress percentages, weekday calendar alignment, and local campus timezone date handling (`getCampusDateString`).
   - Added BuckID financial intelligence engine in `src/utils/diningDiscount.ts` calculating 35% discounts, dollar savings, aggregate meal savings, and retail purchasing power ($250 Dining $ = $384.62 food).
-  - Added cross-platform Toast notification system in `src/context/ToastContext.tsx` and `src/components/ui/Toast.tsx` with Reanimated spring entrance/exit.
+  - Added cross-platform Toast notification system in `src/context/ToastContext.tsx` and `src/components/ui/Toast.tsx` with Reanimated spring entrance/exit and standardized `theme.surfaceElevated`.
+  - Added reusable `src/components/ui/ModalHeader.tsx` consolidating modal header layouts and accessibility.
+  - Added semantic `savingsWash` token to centralized theme (`src/constants/theme.ts`) supporting dark/light modes without hardcoded hexes.
   - Added safe haptics wrapper in `src/utils/haptics.ts` supporting `hapticSuccess`, `hapticLight`, `hapticSelection`, `hapticWarning`, `hapticHeavy`.
   - Added interactive sheets: `app/modal/power-score.tsx` and `app/modal/discount-calculator.tsx`.
   - Added interactive components: `src/components/gamification/StreakMilestoneCard.tsx` and `src/components/dining/DiningDollarBadge.tsx`.
   - Verifier: `src/__tests__/verifyCheckpoint8.ts` (run via `npx tsx src/__tests__/verifyCheckpoint8.ts`).
 - **Commit History**:
   - `4dc20a0` (2026-09-23T10:52:38-04:00): `feat(gamification): implement checkpoint 8 - gamification, financial trackers & polish`
+  - `3e1f941` (2026-09-23T10:59:22-04:00): `docs(checklist): record checkpoint 8 commit history and pass status`
 
 
 

@@ -33,7 +33,9 @@ import {
   evaluateMilestones,
   getNextMilestone,
   evaluateDailyStreak,
+  getCampusDateString,
 } from '../utils/gamification';
+import { lightTheme, darkTheme } from '../constants/theme';
 import {
   calculateDiningDollarDiscount,
   calculateDiningDollarSavings,
@@ -87,6 +89,17 @@ it('Power Score: scales accurately to 100 with full macro and calorie adherence'
   assert.strictEqual(breakdown.calorieScore, 40, 'Max calorie points is 40');
   assert.strictEqual(breakdown.loggingScore, 10, 'Max logging points is 10');
   assert.strictEqual(breakdown.tier, 'Campus Legend', 'Score 100 is Campus Legend tier');
+  assert.strictEqual(breakdown.tierVariant, 'scarlet', 'Campus Legend tierVariant is scarlet');
+});
+
+it('Power Score: respects ±10% protein adherence window yielding full 50 pts at 90%', () => {
+  const targetCalories = 2400;
+  const targetMacros = { protein: 180, carbs: 260, fat: 70 };
+  // 90% of 180g protein is 162g
+  const ninetyPercentTotals = { calories: 2400, macros: { protein: 162, carbs: 260, fat: 70 } };
+  const breakdown = calculatePowerScoreBreakdown(ninetyPercentTotals, targetCalories, targetMacros, 4);
+  assert.strictEqual(breakdown.proteinScore, 50, '90% protein satisfies ±10% adherence window for full 50 pts');
+  assert.strictEqual(breakdown.totalScore, 100, 'Total score is 100 with 90% protein');
 });
 
 it('Power Score: correctly classifies RPAC Beast and Buckeye Starter tiers', () => {
@@ -189,6 +202,13 @@ it('evaluateDailyStreak: resets streak to 1 when a day is skipped', () => {
   const res = evaluateDailyStreak('2026-09-18', 5, '2026-09-22'); // 4-day gap
   assert.strictEqual(res.newStreakDays, 1, 'Streak restarts at 1 day after broken streak');
   assert.strictEqual(res.status, 'streak_restarted', 'Status is streak_restarted');
+});
+
+it('getCampusDateString: returns local calendar date in YYYY-MM-DD format without UTC shifts', () => {
+  const testDate = new Date(2026, 8, 23); // Month 8 is September (0-indexed)
+  const dateStr = getCampusDateString(testDate);
+  assert.strictEqual(dateStr, '2026-09-23', 'Local date formatted correctly');
+  assert.ok(/^\d{4}-\d{2}-\d{2}$/.test(getCampusDateString()), 'Default date matches YYYY-MM-DD');
 });
 
 // =========================================================================
@@ -312,6 +332,17 @@ it('MealPlanStore + UserStore: logging a meal increases logged calories and dyna
   const lunchTotals = mealStore.getLoggedTotals();
   const scoreAfterLunch = calculatePowerScore(lunchTotals, 2400, { protein: 180, carbs: 260, fat: 70 }, 2);
   assert.ok(scoreAfterLunch > scoreAfterBreakfast, `Logging lunch increases power score (${scoreAfterLunch} > ${scoreAfterBreakfast})`);
+});
+
+// =========================================================================
+// Suite 5: Design Tokens & Standard Theme Consistency
+// =========================================================================
+
+it('Theme Tokens: provides savingsWash semantic token across light and dark modes', () => {
+  assert.strictEqual(lightTheme.colors.savingsWash, '#EBFBEE', 'Light theme savingsWash matches #EBFBEE');
+  assert.strictEqual(darkTheme.colors.savingsWash, '#1C2E20', 'Dark theme savingsWash matches #1C2E20');
+  assert.ok(lightTheme.colors.gold !== undefined, 'Gold token is defined');
+  assert.ok(darkTheme.colors.gold !== undefined, 'Dark gold token is defined');
 });
 
 console.log(`\nAll ${passedAssertions} Checkpoint 8 automated assertions PASSED successfully!\n`);

@@ -27,6 +27,7 @@ import { Card } from '@/src/components/ui/Card';
 import { Badge } from '@/src/components/ui/Badge';
 import { Button } from '@/src/components/ui/Button';
 import { MacroRing } from '@/src/components/ui/MacroRing';
+import { ModalHeader } from '@/src/components/ui/ModalHeader';
 import { useTheme } from '@/src/context/ThemeContext';
 import { useUserStore } from '@/src/store/useUserStore';
 import { useMealPlanStore } from '@/src/store/useMealPlanStore';
@@ -59,22 +60,12 @@ export default function PowerScoreModal() {
 
   return (
     <View style={[styles.screen, { backgroundColor: theme.background }]}>
-      {/* Header Bar */}
-      <View style={[styles.headerBar, { borderBottomColor: theme.border }]}>
-        <View style={styles.headerTitleRow}>
-          <Award size={22} color={theme.scarlet} />
-          <Text style={[styles.headerTitle, { color: theme.textPrimary }]}>
-            Buckeye Power Score
-          </Text>
-        </View>
-        <Pressable
-          onPress={handleClose}
-          style={styles.closeBtn}
-          accessibilityLabel="Close power score breakdown"
-        >
-          <X size={20} color={theme.textSecondary} />
-        </Pressable>
-      </View>
+      <ModalHeader
+        title="Buckeye Power Score"
+        icon={<Award size={22} color={theme.scarlet} />}
+        onClose={handleClose}
+        accessibilityLabel="Close power score breakdown"
+      />
 
       <ScrollView
         style={styles.scroll}
@@ -90,7 +81,7 @@ export default function PowerScoreModal() {
                 target={100}
                 size={140}
                 strokeWidth={14}
-                color={breakdown.tierColor}
+                color={breakdown.tierVariant === 'scarlet' ? theme.scarlet : breakdown.tierVariant === 'gold' ? theme.gold : breakdown.tierVariant === 'success' ? theme.success : theme.textSecondary}
                 label="Power"
                 unit="pts"
                 showPercentage={false}
@@ -100,9 +91,9 @@ export default function PowerScoreModal() {
             <View style={styles.tierRow}>
               <Badge
                 label={breakdown.tier}
-                variant={breakdown.totalScore >= 75 ? 'scarlet' : 'default'}
+                variant={breakdown.tierVariant}
                 size="md"
-                icon={<Zap size={14} color={breakdown.tierColor} />}
+                icon={<Zap size={14} color={breakdown.tierVariant === 'scarlet' ? theme.scarlet : breakdown.tierVariant === 'gold' ? theme.goldDark : theme.success} />}
               />
             </View>
 
@@ -207,7 +198,7 @@ export default function PowerScoreModal() {
         </Card>
 
         {/* Brutus Coaching Card */}
-        <Card variant="elevated" padding="md" style={styles.coachingCard}>
+        <Card variant="elevated" padding="md" style={[styles.coachingCard, { borderLeftColor: theme.gold }]}>
           <View style={styles.coachingHeader}>
             <Sparkles size={18} color={theme.goldDark} />
             <Text style={[styles.coachingTitle, { color: theme.textPrimary }]}>
@@ -328,7 +319,6 @@ const styles = StyleSheet.create({
   coachingCard: {
     marginVertical: spacing.md,
     borderLeftWidth: 4,
-    borderLeftColor: '#D4AF37',
   },
   coachingHeader: {
     flexDirection: 'row',

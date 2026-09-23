@@ -130,7 +130,7 @@ export const Toast: React.FC<ToastProps> = ({
         style={[
           styles.toastContainer,
           {
-            backgroundColor: isDark ? '#26262E' : '#FFFFFF',
+            backgroundColor: theme.surfaceElevated,
             borderColor: theme.border,
             borderLeftColor: getAccentColor(),
           },

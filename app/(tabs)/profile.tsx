@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useMemo, useState } from 'react';
 import {
   Alert,
   Pressable,
@@ -39,6 +39,7 @@ import {
   ACTIVITY_LABELS,
   ActivityLevel,
   calculateBmr,
+  calculatePowerScore,
   calculateSuggestedMacros,
   calculateTdee,
 } from '@/src/utils/nutrition';
@@ -56,7 +57,7 @@ const GOAL_OPTIONS: { id: FitnessGoal; label: string; desc: string }[] = [
 export default function ProfileScreen() {
   const router = useRouter();
   const { showToast } = useToast();
-  const { theme, isDark, themeMode, setThemeMode } = useTheme();
+  const { theme, themeMode, setThemeMode } = useTheme();
 
   const {
     profile,
@@ -75,7 +76,21 @@ export default function ProfileScreen() {
     resetToDemo,
   } = useUserStore();
 
-  const { resetToDemoPlan } = useMealPlanStore();
+  const { activePlan, getLoggedTotals, resetToDemoPlan } = useMealPlanStore();
+
+  const loggedTotals = getLoggedTotals();
+  const loggedSlotCount = useMemo(() => {
+    return Object.values(activePlan.meals).filter((m) => m.isLogged).length;
+  }, [activePlan.meals]);
+
+  const livePowerScore = useMemo(() => {
+    return calculatePowerScore(
+      loggedTotals,
+      profile.targetCalories,
+      profile.targetMacros,
+      loggedSlotCount
+    );
+  }, [loggedTotals, profile.targetCalories, profile.targetMacros, loggedSlotCount]);
 
   // TDEE Calculator local state
   const [showTdeeCalc, setShowTdeeCalc] = useState(false);
@@ -214,7 +229,7 @@ export default function ProfileScreen() {
                   style={({ pressed }) => pressed && { opacity: 0.8 }}
                 >
                   <Badge
-                    label={`${profile.powerScore} Power Score`}
+                    label={`${livePowerScore} Power Score`}
                     variant="gold"
                     size="sm"
                     icon={<Award size={12} color={theme.goldDark} />}
@@ -551,7 +566,7 @@ export default function ProfileScreen() {
               marginTop: spacing.md,
               padding: spacing.sm,
               borderRadius: radii.sm,
-              backgroundColor: isDark ? '#1C2E20' : '#EBFBEE',
+              backgroundColor: theme.savingsWash,
               borderWidth: 1,
               borderColor: theme.success,
             }}

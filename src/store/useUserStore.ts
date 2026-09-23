@@ -16,7 +16,7 @@ import {
   UserStore,
 } from '../types';
 import { appStorage, STORAGE_KEYS } from './storage';
-import { evaluateDailyStreak, evaluateMilestones } from '../utils/gamification';
+import { evaluateDailyStreak, evaluateMilestones, getCampusDateString } from '../utils/gamification';
 import { calculatePowerScore } from '../utils/nutrition';
 
 
@@ -213,7 +213,7 @@ export const useUserStore = create<UserStore>()(
             profile: {
               ...state.profile,
               streakDays: nextStreak,
-              lastActiveDate: new Date().toISOString().split('T')[0],
+              lastActiveDate: getCampusDateString(),
               unlockedMilestones: Array.from(new Set([...currentMilestones, ...unlockedIds])),
             },
           };

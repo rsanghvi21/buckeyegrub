@@ -120,6 +120,7 @@ export const lightSemanticColors = {
   textSecondary: '#666666',
   textMuted: '#8E99A2',
   textInverse: '#FFFFFF',
+  savingsWash: '#EBFBEE',
 } as const;
 
 // Dark Mode Semantic Colors
@@ -134,6 +135,7 @@ export const darkSemanticColors = {
   textSecondary: '#A7B1B7',
   textMuted: '#7E8B95',
   textInverse: '#1E1E24',
+  savingsWash: '#1C2E20',
 } as const;
 
 // Default exported colors object (preserves backward compatibility while carrying palette + light semantics)

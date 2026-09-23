@@ -4,7 +4,7 @@
  * progress bar to next milestone, and unlocked milestone badges (3, 7, 14, 30 days).
  */
 
-import React from 'react';
+import React, { useMemo } from 'react';
 import {
   Pressable,
   StyleSheet,
@@ -24,7 +24,7 @@ import { Card } from '../ui/Card';
 import { Badge } from '../ui/Badge';
 import { BuckeyeLeaf } from '../navigation/BuckeyeLeaf';
 import { useTheme } from '@/src/context/ThemeContext';
-import { radii, spacing, typography } from '@/src/constants/theme';
+import { colors, radii, spacing, typography } from '@/src/constants/theme';
 import {
   evaluateMilestones,
   getNextMilestone,
@@ -63,8 +63,24 @@ export const StreakMilestoneCard: React.FC<StreakMilestoneCardProps> = ({
     }
   };
 
-  // 7-day rolling schedule (last 7 days)
-  const weekdays = ['M', 'T', 'W', 'T', 'F', 'S', 'S'];
+  // 7-day rolling schedule (past 6 days + today)
+  const rollingDays = useMemo(() => {
+    const dayLetters = ['S', 'M', 'T', 'W', 'T', 'F', 'S']; // 0 = Sunday
+    const today = new Date();
+    const days = [];
+    for (let i = 6; i >= 0; i--) {
+      const d = new Date();
+      d.setDate(today.getDate() - i);
+      // Days within active consecutive streak (e.g. today is index 0 in lookback, i < streakDays)
+      const isActive = i < Math.max(0, Math.min(7, streakDays));
+      days.push({
+        label: dayLetters[d.getDay()],
+        isActive,
+        isToday: i === 0,
+      });
+    }
+    return days;
+  }, [streakDays]);
 
   return (
     <Card variant="elevated" padding="md" style={styles.card}>
@@ -102,33 +118,30 @@ export const StreakMilestoneCard: React.FC<StreakMilestoneCardProps> = ({
 
       {/* 7-day visualizer */}
       <View style={styles.weekRow}>
-        {weekdays.map((day, idx) => {
-          // Highlight active days up to streakDays (capped at 7 for visualizer)
-          const isActive = idx < Math.min(7, streakDays);
-          return (
-            <View key={idx} style={styles.dayCol}>
-              <View
-                style={[
-                  styles.dayDot,
-                  {
-                    backgroundColor: isActive ? theme.scarlet : theme.surfaceHover,
-                    borderColor: isActive ? theme.scarlet : theme.border,
-                  },
-                ]}
-              >
-                {isActive && <CheckCircle2 size={12} color="#FFFFFF" />}
-              </View>
-              <Text
-                style={[
-                  styles.dayLabel,
-                  { color: isActive ? theme.textPrimary : theme.textSecondary },
-                ]}
-              >
-                {day}
-              </Text>
+        {rollingDays.map((day, idx) => (
+          <View key={idx} style={styles.dayCol}>
+            <View
+              style={[
+                styles.dayDot,
+                {
+                  backgroundColor: day.isActive ? theme.scarlet : theme.surfaceHover,
+                  borderColor: day.isActive ? theme.scarlet : theme.border,
+                },
+              ]}
+            >
+              {day.isActive && <CheckCircle2 size={12} color={colors.textInverse || '#FFFFFF'} />}
             </View>
-          );
-        })}
+            <Text
+              style={[
+                styles.dayLabel,
+                { color: day.isActive ? theme.textPrimary : theme.textSecondary },
+                day.isToday && { fontWeight: typography.weights.heavy, color: theme.scarlet },
+              ]}
+            >
+              {day.label}
+            </Text>
+          </View>
+        ))}
       </View>
 
       {/* Milestone Progress Bar */}

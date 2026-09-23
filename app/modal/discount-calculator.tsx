@@ -21,13 +21,13 @@ import {
   DollarSign,
   Sparkles,
   TrendingUp,
-  X,
   Wallet,
   ArrowRight,
 } from 'lucide-react-native';
 import { Card } from '@/src/components/ui/Card';
 import { Badge } from '@/src/components/ui/Badge';
 import { Button } from '@/src/components/ui/Button';
+import { ModalHeader } from '@/src/components/ui/ModalHeader';
 import { useTheme } from '@/src/context/ThemeContext';
 import { useUserStore } from '@/src/store/useUserStore';
 import {
@@ -41,7 +41,7 @@ import { hapticLight, hapticSelection } from '@/src/utils/haptics';
 export default function DiscountCalculatorModal() {
   const router = useRouter();
   const params = useLocalSearchParams<{ venueId?: string; price?: string }>();
-  const { theme, isDark } = useTheme();
+  const { theme } = useTheme();
   const { profile } = useUserStore();
 
   const initialPrice = params.price ? parseFloat(params.price) : 12.0;
@@ -88,24 +88,13 @@ export default function DiscountCalculatorModal() {
   return (
     <KeyboardAvoidingView
       behavior={Platform.OS === 'ios' ? 'padding' : undefined}
-      style={[styles.screen, { backgroundColor: theme.background }]}
-    >
-      {/* Header Bar */}
-      <View style={[styles.headerBar, { borderBottomColor: theme.border }]}>
-        <View style={styles.headerTitleRow}>
-          <Calculator size={22} color={theme.success} />
-          <Text style={[styles.headerTitle, { color: theme.textPrimary }]}>
-            Dining Dollar 35% Calculator
-          </Text>
-        </View>
-        <Pressable
-          onPress={handleClose}
-          style={styles.closeBtn}
-          accessibilityLabel="Close discount calculator"
-        >
-          <X size={20} color={theme.textSecondary} />
-        </Pressable>
-      </View>
+      style={[styles.screen, { backgroundColor: theme.background }]}>
+      <ModalHeader
+        title="Dining Dollar 35% Calculator"
+        icon={<Calculator size={22} color={theme.success} />}
+        onClose={handleClose}
+        accessibilityLabel="Close discount calculator"
+      />
 
       <ScrollView
         style={styles.scroll}
@@ -222,7 +211,7 @@ export default function DiscountCalculatorModal() {
           <View
             style={[
               styles.savingsHighlightBar,
-              { backgroundColor: isDark ? '#1C2E20' : '#EBFBEE', borderColor: theme.success },
+              { backgroundColor: theme.savingsWash, borderColor: theme.success },
             ]}
           >
             <View style={styles.savingsIconWrapper}>
@@ -288,7 +277,7 @@ export default function DiscountCalculatorModal() {
         </Card>
 
         {/* Brutus Smart Budgeting Tip */}
-        <Card variant="elevated" padding="md" style={styles.brutusCard}>
+        <Card variant="elevated" padding="md" style={[styles.brutusCard, { borderLeftColor: theme.gold }]}>
           <View style={styles.brutusHeader}>
             <Sparkles size={16} color={theme.goldDark} />
             <Text style={[styles.brutusTitle, { color: theme.textPrimary }]}>
@@ -318,27 +307,6 @@ export default function DiscountCalculatorModal() {
 const styles = StyleSheet.create({
   screen: {
     flex: 1,
-  },
-  headerBar: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingHorizontal: spacing.md,
-    paddingTop: spacing.lg,
-    paddingBottom: spacing.md,
-    borderBottomWidth: 1,
-  },
-  headerTitleRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: spacing.xs,
-  },
-  headerTitle: {
-    fontSize: typography.sizes.lg,
-    fontWeight: typography.weights.bold,
-  },
-  closeBtn: {
-    padding: spacing.xs,
   },
   scroll: {
     flex: 1,
@@ -491,7 +459,6 @@ const styles = StyleSheet.create({
   brutusCard: {
     marginBottom: spacing.md,
     borderLeftWidth: 4,
-    borderLeftColor: '#D4AF37',
   },
   brutusHeader: {
     flexDirection: 'row',

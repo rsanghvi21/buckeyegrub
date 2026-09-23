@@ -100,6 +100,17 @@ export interface StreakEvaluationResult {
 }
 
 /**
+ * Formats a Date object to local campus date string 'YYYY-MM-DD'.
+ * Avoids UTC timezone conversion shifts for students in Columbus, OH.
+ */
+export function getCampusDateString(date: Date = new Date()): string {
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const day = String(date.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
+}
+
+/**
  * Pure date calculation helper that advances or resets streak based on calendar date.
  */
 export function evaluateDailyStreak(
@@ -107,7 +118,8 @@ export function evaluateDailyStreak(
   currentStreakDays: number,
   referenceDateStr?: string
 ): StreakEvaluationResult {
-  const todayStr = referenceDateStr || new Date().toISOString().split('T')[0];
+  const todayStr = referenceDateStr || getCampusDateString();
+
 
   if (!lastActiveDate) {
     const newStreak = 1;
