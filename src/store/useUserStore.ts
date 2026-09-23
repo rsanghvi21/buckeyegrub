@@ -16,6 +16,9 @@ import {
   UserStore,
 } from '../types';
 import { appStorage, STORAGE_KEYS } from './storage';
+import { evaluateDailyStreak, evaluateMilestones, getCampusDateString } from '../utils/gamification';
+import { calculatePowerScore } from '../utils/nutrition';
+
 
 export const useUserStore = create<UserStore>()(
   persist(
@@ -201,13 +204,20 @@ export const useUserStore = create<UserStore>()(
       },
 
       incrementStreak: () => {
-        set((state) => ({
-          profile: {
-            ...state.profile,
-            streakDays: state.profile.streakDays + 1,
-            lastActiveDate: new Date().toISOString().split('T')[0],
-          },
-        }));
+        set((state) => {
+          const nextStreak = state.profile.streakDays + 1;
+          const currentMilestones = state.profile.unlockedMilestones || [];
+          const evaluated = evaluateMilestones(nextStreak);
+          const unlockedIds = evaluated.filter((m) => m.isUnlocked).map((m) => m.id);
+          return {
+            profile: {
+              ...state.profile,
+              streakDays: nextStreak,
+              lastActiveDate: getCampusDateString(),
+              unlockedMilestones: Array.from(new Set([...currentMilestones, ...unlockedIds])),
+            },
+          };
+        });
       },
 
       resetStreak: () => {
@@ -215,8 +225,37 @@ export const useUserStore = create<UserStore>()(
           profile: {
             ...state.profile,
             streakDays: 0,
+            unlockedMilestones: [],
           },
         }));
+      },
+
+      recordMealLoggedStreak: (referenceDateStr?: string) => {
+        const state = get();
+        const result = evaluateDailyStreak(
+          state.profile.lastActiveDate,
+          state.profile.streakDays,
+          referenceDateStr
+        );
+
+        const currentMilestones = state.profile.unlockedMilestones || [];
+        const evaluated = evaluateMilestones(result.newStreakDays);
+        const unlockedIds = evaluated.filter((m) => m.isUnlocked).map((m) => m.id);
+
+        set({
+          profile: {
+            ...state.profile,
+            streakDays: result.newStreakDays,
+            lastActiveDate: result.dateRecorded,
+            unlockedMilestones: Array.from(new Set([...currentMilestones, ...unlockedIds])),
+          },
+        });
+
+        return {
+          newStreakDays: result.newStreakDays,
+          status: result.status,
+          newMilestoneUnlocked: result.newMilestoneUnlocked ? result.newMilestoneUnlocked.title : null,
+        };
       },
 
       setPowerScore: (score: number) => {
@@ -228,6 +267,27 @@ export const useUserStore = create<UserStore>()(
           },
         }));
       },
+
+      recalculatePowerScore: (
+        loggedTotals: { calories: number; macros: { protein: number; carbs: number; fat: number } },
+        loggedSlotCount?: number
+      ) => {
+        const state = get();
+        const score = calculatePowerScore(
+          loggedTotals,
+          state.profile.targetCalories,
+          state.profile.targetMacros,
+          loggedSlotCount
+        );
+        set((s) => ({
+          profile: {
+            ...s.profile,
+            powerScore: score,
+          },
+        }));
+        return score;
+      },
+
 
       resetToDemo: () => {
         set({

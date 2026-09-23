@@ -45,6 +45,7 @@ export interface UserProfile {
   streakDays: number;
   lastActiveDate: string; // YYYY-MM-DD
   powerScore: number;     // 0 - 100
+  unlockedMilestones?: string[];
   preferences?: UserPreferences;
 }
 
@@ -71,6 +72,7 @@ export const DEMO_USER_PROFILE: UserProfile = {
   streakDays: 5,
   lastActiveDate: '2026-09-18',
   powerScore: 92,
+  unlockedMilestones: ['milestone-3'],
   preferences: {
     theme: 'light',
     enableHaptics: true,
@@ -102,9 +104,19 @@ export interface UserStoreActions {
   setApiKeys: (keys: { geminiApiKey?: string; openaiApiKey?: string }) => void;
   incrementStreak: () => void;
   resetStreak: () => void;
+  recordMealLoggedStreak: (referenceDateStr?: string) => {
+    newStreakDays: number;
+    status: string;
+    newMilestoneUnlocked: string | null;
+  };
   setPowerScore: (score: number) => void;
+  recalculatePowerScore: (
+    loggedTotals: { calories: number; macros: { protein: number; carbs: number; fat: number } },
+    loggedSlotCount?: number
+  ) => number;
   resetToDemo: () => void;
   setHasHydrated: (hydrated: boolean) => void;
 }
+
 
 export type UserStore = UserStoreState & UserStoreActions;

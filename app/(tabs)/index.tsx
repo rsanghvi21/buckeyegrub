@@ -9,6 +9,7 @@ import {
 import { useRouter } from 'expo-router';
 import {
   Award,
+  Calculator,
   CheckCircle2,
   ChevronRight,
   ExternalLink,
@@ -28,11 +29,13 @@ import {
   ProgressBar,
 } from '@/src/components/ui';
 import { radii, spacing, typography } from '@/src/constants/theme';
-import { useTheme } from '@/src/context';
+import { useTheme, useToast } from '@/src/context';
 import { OSU_MENU_ITEMS_MAP, OSU_VENUES_MAP } from '@/src/data';
 import { useMealPlanStore, useUserStore } from '@/src/store';
 import { MealSlotType } from '@/src/types/mealPlan';
 import { calculatePowerScore } from '@/src/utils/nutrition';
+import { hapticLight, hapticSelection, hapticSuccess } from '@/src/utils/haptics';
+import { calculateItemsFinancialSavings } from '@/src/utils/diningDiscount';
 
 const SLOT_ORDER: { key: MealSlotType; label: string; timeHint: string }[] = [
   { key: 'breakfast', label: 'Breakfast', timeHint: '7:00 AM – 10:30 AM' },
@@ -44,7 +47,13 @@ const SLOT_ORDER: { key: MealSlotType; label: string; timeHint: string }[] = [
 export default function DashboardScreen() {
   const router = useRouter();
   const { theme, isDark } = useTheme();
-  const { profile, resetToDemo: resetUserDemo } = useUserStore();
+  const { showToast } = useToast();
+  const {
+    profile,
+    resetToDemo: resetUserDemo,
+    recordMealLoggedStreak,
+    recalculatePowerScore,
+  } = useUserStore();
   const {
     activePlan,
     toggleSlotLogged,
@@ -56,19 +65,84 @@ export default function DashboardScreen() {
   const loggedTotals = getLoggedTotals();
   const dailyTotals = getDailyTotals();
 
+  // Count active logged slots
+  const loggedSlotCount = useMemo(() => {
+    return Object.values(activePlan.meals).filter((m) => m.isLogged).length;
+  }, [activePlan.meals]);
+
   // Calculated dynamic Power Score based on real logged totals vs targets
   const livePowerScore = useMemo(() => {
-    return calculatePowerScore(loggedTotals, profile.targetCalories, profile.targetMacros);
-  }, [loggedTotals, profile.targetCalories, profile.targetMacros]);
+    return calculatePowerScore(
+      loggedTotals,
+      profile.targetCalories,
+      profile.targetMacros,
+      loggedSlotCount
+    );
+  }, [loggedTotals, profile.targetCalories, profile.targetMacros, loggedSlotCount]);
+
+  // Financial savings on today's planned meals
+  const allPlannedItems = useMemo(() => {
+    return Object.values(activePlan.meals).flatMap((s) => s.items.map((i) => i.menuItem));
+  }, [activePlan.meals]);
+
+  const planSavings = useMemo(() => {
+    return calculateItemsFinancialSavings(allPlannedItems);
+  }, [allPlannedItems]);
 
   const caloriePercentage = Math.min(
     150,
     Math.round((loggedTotals.calories / (profile.targetCalories || 1)) * 100)
   );
 
+  const handleToggleSlot = async (slotKey: MealSlotType) => {
+    const currentSlot = activePlan.meals[slotKey];
+    const willBeLogged = !currentSlot.isLogged;
+    toggleSlotLogged(slotKey);
+
+    const slotLabel = SLOT_ORDER.find((s) => s.key === slotKey)?.label || 'Meal';
+
+    if (willBeLogged) {
+      await hapticSuccess();
+      const streakRes = recordMealLoggedStreak();
+      const nextTotals = getLoggedTotals();
+      const nextLoggedCount = Object.values(activePlan.meals).filter((m) =>
+        m.slot === slotKey ? true : m.isLogged
+      ).length;
+      const score = recalculatePowerScore(nextTotals, nextLoggedCount);
+
+      if (streakRes.newMilestoneUnlocked) {
+        showToast({
+          message: `🏆 Milestone Unlocked: "${streakRes.newMilestoneUnlocked}"! (${streakRes.newStreakDays}d streak)`,
+          type: 'gold',
+          durationMs: 4000,
+        });
+      } else {
+        showToast({
+          message: `${slotLabel} logged! Power Score: ${score} pts 🌰`,
+          type: 'success',
+        });
+      }
+    } else {
+      await hapticLight();
+      showToast({
+        message: `${slotLabel} marked as planned.`,
+        type: 'info',
+      });
+      const nextTotals = getLoggedTotals();
+      const nextLoggedCount = Object.values(activePlan.meals).filter((m) =>
+        m.slot === slotKey ? false : m.isLogged
+      ).length;
+      recalculatePowerScore(nextTotals, nextLoggedCount);
+    }
+  };
+
   const handleResetDemo = () => {
     resetUserDemo();
     resetToDemoPlan();
+    showToast({
+      message: 'Demo profile & game-day plan reset!',
+      type: 'info',
+    });
   };
 
   return (
@@ -78,18 +152,36 @@ export default function DashboardScreen() {
         subtitle={`Welcome back, ${profile.name.split(' ')[0]}!`}
         rightAction={
           <View style={styles.headerBadgesRow}>
-            <Badge
-              label={`${profile.streakDays}d Streak`}
-              variant="scarlet"
-              size="sm"
-              icon={<BuckeyeLeaf size={14} color={theme.scarlet} />}
-            />
-            <Badge
-              label={`${livePowerScore} Score`}
-              variant="gold"
-              size="sm"
-              icon={<Award size={14} color={theme.goldDark} />}
-            />
+            <Pressable
+              onPress={async () => {
+                await hapticSelection();
+                router.push('/(tabs)/profile' as any);
+              }}
+              accessibilityLabel={`${profile.streakDays} day streak. Open profile.`}
+              style={({ pressed }) => pressed && { opacity: 0.8 }}
+            >
+              <Badge
+                label={`${profile.streakDays}d Streak`}
+                variant="scarlet"
+                size="sm"
+                icon={<BuckeyeLeaf size={14} color={theme.scarlet} />}
+              />
+            </Pressable>
+            <Pressable
+              onPress={async () => {
+                await hapticSelection();
+                router.push('/modal/power-score' as any);
+              }}
+              accessibilityLabel={`${livePowerScore} Power Score. Open breakdown.`}
+              style={({ pressed }) => pressed && { opacity: 0.8 }}
+            >
+              <Badge
+                label={`${livePowerScore} Score`}
+                variant="gold"
+                size="sm"
+                icon={<Award size={14} color={theme.goldDark} />}
+              />
+            </Pressable>
           </View>
         }
       />
@@ -123,7 +215,35 @@ export default function DashboardScreen() {
               </Text>
             </View>
           </View>
+
+          {/* 35% Dining Dollar Savings Callout */}
+          {planSavings.totalSavings > 0 && (
+            <Pressable
+              onPress={async () => {
+                await hapticSelection();
+                router.push('/modal/discount-calculator' as any);
+              }}
+              style={({ pressed }) => [
+                styles.savingsBanner,
+                {
+                  backgroundColor: theme.savingsWash,
+                  borderColor: theme.success,
+                },
+                pressed && { opacity: 0.8 },
+              ]}
+              accessibilityLabel={`Save $${planSavings.totalSavings.toFixed(2)} with dining dollars today. Open calculator.`}
+            >
+              <View style={styles.savingsBannerLeft}>
+                <Calculator size={15} color={theme.success} />
+                <Text style={[styles.savingsBannerText, { color: theme.success }]}>
+                  Save ${planSavings.totalSavings.toFixed(2)} with Dining $ (35% OFF)
+                </Text>
+              </View>
+              <ChevronRight size={15} color={theme.success} />
+            </Pressable>
+          )}
         </Card>
+
 
         {/* Daily Nutrition & Macro Progress Card */}
         <Card variant="elevated" padding="lg" style={styles.macroCard}>
@@ -320,7 +440,7 @@ export default function DashboardScreen() {
                   label={isLogged ? 'Mark Planned' : 'Log Meal'}
                   variant={isLogged ? 'outline' : 'primary'}
                   size="sm"
-                  onPress={() => toggleSlotLogged(key)}
+                  onPress={() => handleToggleSlot(key)}
                   icon={isLogged ? <CheckCircle2 size={16} color={theme.scarlet} /> : undefined}
                 />
 
@@ -424,6 +544,26 @@ const styles = StyleSheet.create({
   balanceDivider: {
     width: 1,
     height: 28,
+  },
+  savingsBanner: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingVertical: spacing.xs,
+    paddingHorizontal: spacing.sm,
+    borderRadius: radii.sm,
+    borderWidth: 1,
+    marginTop: spacing.xs,
+  },
+  savingsBannerLeft: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.xs,
+    flex: 1,
+  },
+  savingsBannerText: {
+    fontSize: typography.fontSizes.xs,
+    fontWeight: '700',
   },
   macroCard: {
     marginVertical: spacing.sm,

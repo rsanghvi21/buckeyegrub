@@ -21,6 +21,7 @@ import {
 } from 'lucide-react-native';
 import { Header } from '@/src/components/navigation/Header';
 import { Badge, Button, Card } from '@/src/components/ui';
+import { DiningDollarBadge } from '@/src/components/dining/DiningDollarBadge';
 import { radii, spacing, typography } from '@/src/constants/theme';
 import { useTheme } from '@/src/context';
 import { OSU_MENU_ITEMS_BY_VENUE, OSU_MENU_ITEMS_MAP, OSU_VENUES } from '@/src/data';
@@ -284,7 +285,11 @@ export default function MenusScreen() {
                     <Badge label="Swipe Eligible" variant="paymentSwipe" size="sm" />
                   )}
                   {venue.acceptedPayments.includes('dining_dollars') && (
-                    <Badge label="35% Off Dining $" variant="paymentDiningDollars" size="sm" />
+                    <DiningDollarBadge
+                      venueId={venue.id}
+                      label="35% Off Dining $"
+                      size="sm"
+                    />
                   )}
                   {venue.hasMobileOrdering && (
                     <Badge label="Grubhub Mobile" variant="default" size="sm" />
@@ -350,9 +355,20 @@ export default function MenusScreen() {
                             </View>
 
                             {/* Dining Dollar 35% Discount Callout */}
-                            <Text style={[styles.discountNote, { color: theme.success }]}>
-                              Dining $: ${discountedPrice.toFixed(2)} (35% OFF)
-                            </Text>
+                            <Pressable
+                              onPress={() =>
+                                router.push({
+                                  pathname: '/modal/discount-calculator' as any,
+                                  params: { venueId: venue.id, price: String(item.price) },
+                                } as any)
+                              }
+                              style={({ pressed }) => pressed && { opacity: 0.7 }}
+                              accessibilityLabel={`Dining Dollars price: $${discountedPrice.toFixed(2)}. Tap to open discount calculator.`}
+                            >
+                              <Text style={[styles.discountNote, { color: theme.success }]}>
+                                Dining $: ${discountedPrice.toFixed(2)} (35% OFF)
+                              </Text>
+                            </Pressable>
 
                             {item.description ? (
                               <Text style={[styles.itemDesc, { color: theme.textSecondary }]} numberOfLines={2}>
