@@ -196,6 +196,9 @@
   - Added interactive sheets: `app/modal/power-score.tsx` and `app/modal/discount-calculator.tsx`.
   - Added interactive components: `src/components/gamification/StreakMilestoneCard.tsx` and `src/components/dining/DiningDollarBadge.tsx`.
   - Verifier: `src/__tests__/verifyCheckpoint8.ts` (run via `npx tsx src/__tests__/verifyCheckpoint8.ts`).
+- **Commit History**:
+  - `4dc20a0` (2026-09-23T10:52:38-04:00): `feat(gamification): implement checkpoint 8 - gamification, financial trackers & polish`
+
 
 
 ---
