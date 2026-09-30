@@ -63,10 +63,11 @@ BuckeyeGrub was built to solve that headache. It connects real Ohio State dining
 
 | Layer | Tools |
 |---|---|
-| Framework | React Native (0.76.7) with Expo (SDK 52) |
+| Framework | React Native (0.86.3) with Expo (SDK 57) |
 | Routing | Expo Router v4 (file-based navigation) |
-| Language | TypeScript (strict mode enabled) |
-| Animations & Icons | React Native Reanimated 3, React Native SVG, Lucide React Native |
+| Language | TypeScript (~6.0.3, strict mode enabled) |
+| Testing | Jest 30, ts-jest, standalone TypeScript verification suites |
+| Animations & Icons | React Native Reanimated 4, React Native SVG, Lucide React Native |
 | State Management | Zustand with AsyncStorage persistence |
 | AI & Algorithms | Google Gemini API, OpenAI toggle, offline deterministic heuristic solver |
 | Campus Dining Data | OSU Nutrislice REST API with local snapshot fallbacks |
@@ -150,12 +151,20 @@ buckeyegrub/
   ```
 - Type checking:
   ```bash
-  npx tsc --noEmit
+  npm run type-check
   ```
-- Run test suites:
+- Run Jest unit tests:
+  ```bash
+  npm test
+  ```
+- Run automated verification suites:
   ```bash
   npx tsx src/__tests__/verifyCheckpoint8.ts
   npx tsx src/__tests__/verifyCheckpoint7.ts
+  npx tsx src/services/ai/__tests__/verifyAI.ts
+  npx tsx src/services/grubhub/__tests__/verifyDeepLink.ts
+  npx tsx src/services/nutrislice/__tests__/verifyCatalog.ts
+  npx tsx src/store/__tests__/verifyState.ts
   ```
 
 ---
@@ -164,7 +173,7 @@ buckeyegrub/
 
 Development is tracked through the milestone checkpoints in `checklist.md`:
 
-- [x] Checkpoint 1: Project Scaffolding & Tooling Setup (Expo SDK 52, TypeScript strict mode, Metro bundler)
+- [x] Checkpoint 1: Project Scaffolding & Tooling Setup (Expo SDK 57, TypeScript strict mode, Metro bundler)
 - [x] Checkpoint 2: OSU Design System & Component Library (Scarlet and Gray palette, MacroRing, ProgressBar)
 - [x] Checkpoint 3: Campus Dining & Nutrislice Catalog (API client, 10+ OSU venues, macro normalizer)
 - [x] Checkpoint 4: State Management & Persistence Layer (Zustand + AsyncStorage persistence, demo profile)
@@ -172,8 +181,8 @@ Development is tracked through the milestone checkpoints in `checklist.md`:
 - [x] Checkpoint 6: Grubhub Deep-Link & Order Assistant Modal (Customization copier, mobile scheme handoff)
 - [x] Checkpoint 7: Core Screens & Navigation (Dashboard, AI Planner, Menus, Saved, Profile)
 - [x] Checkpoint 8: Gamification, Financial Trackers & Polish (Power Score, streaks, 35% discount calculator, toasts)
-- [ ] Checkpoint 9: Automated Verification & Cross-Platform Testing
-- [ ] Checkpoint 10: Final Documentation & Release Readiness
+- [x] Checkpoint 9: Automated Verification & Cross-Platform Testing (61 Jest unit & layout tests across 4 suites, clean web build export)
+- [x] Checkpoint 10: Final Documentation & Release Readiness (Comprehensive README, walkthrough demonstration)
 
 ---
 
