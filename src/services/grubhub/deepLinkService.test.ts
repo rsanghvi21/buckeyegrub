@@ -6,6 +6,15 @@ import {
 import { OSU_VENUES } from '../../data';
 import { DiningVenue } from '../../types/dining';
 
+const mockCanOpenURL = jest.fn();
+const mockOpenURL = jest.fn();
+
+jest.mock('expo-linking', () => ({
+  __esModule: true,
+  canOpenURL: (...args: unknown[]) => mockCanOpenURL(...args),
+  openURL: (...args: unknown[]) => mockOpenURL(...args),
+}));
+
 describe('Grubhub Deep-Link Service', () => {
   const mockVenueWithCuratedUrls: DiningVenue = {
     id: 'test-curl',
@@ -110,7 +119,12 @@ describe('Grubhub Deep-Link Service', () => {
     });
   });
 
-  describe('openVenueOrder (contract verification)', () => {
+  describe('openVenueOrder (contract & fallback verification)', () => {
+    beforeEach(() => {
+      mockCanOpenURL.mockReset();
+      mockOpenURL.mockReset();
+    });
+
     it('returns graceful error result for unmapped venues without throwing', async () => {
       const result = await openVenueOrder(mockVenueUnmapped);
       expect(result.opened).toBe(false);
@@ -119,11 +133,60 @@ describe('Grubhub Deep-Link Service', () => {
       expect(result.error).toContain('does not have a Grubhub ordering link');
     });
 
-    it('attempts to open mapped venues following Linking contract', async () => {
-      // In node/test environment, expo-linking canOpenURL may fail gracefully or fallback
+    it('launches native deep link when canOpenURL returns true', async () => {
+      mockCanOpenURL.mockResolvedValueOnce(true);
+      mockOpenURL.mockResolvedValueOnce(true);
+
+      const result = await openVenueOrder(mockVenueWithCuratedUrls);
+
+      expect(mockCanOpenURL).toHaveBeenCalledWith(mockVenueWithCuratedUrls.grubhubUri);
+      expect(mockOpenURL).toHaveBeenCalledWith(mockVenueWithCuratedUrls.grubhubUri);
+      expect(result.opened).toBe(true);
+      expect(result.usedFallback).toBe(false);
+      expect(result.target).toBe(mockVenueWithCuratedUrls.grubhubUri);
+    });
+
+    it('falls back to web URL when canOpenURL returns false', async () => {
+      mockCanOpenURL.mockResolvedValueOnce(false);
+      mockOpenURL.mockResolvedValueOnce(true);
+
+      const result = await openVenueOrder(mockVenueWithCuratedUrls);
+
+      expect(mockCanOpenURL).toHaveBeenCalledWith(mockVenueWithCuratedUrls.grubhubUri);
+      expect(mockOpenURL).toHaveBeenCalledWith(mockVenueWithCuratedUrls.grubhubUrl);
+      expect(result.opened).toBe(true);
+      expect(result.usedFallback).toBe(true);
+      expect(result.target).toBe(mockVenueWithCuratedUrls.grubhubUrl);
+    });
+
+    it('falls back to web URL when canOpenURL throws an error', async () => {
+      mockCanOpenURL.mockRejectedValueOnce(new Error('Simulated platform linking failure'));
+      mockOpenURL.mockResolvedValueOnce(true);
+
       const result = await openVenueOrder(mockVenueSlugOnly);
-      expect(typeof result.opened).toBe('boolean');
-      expect(typeof result.usedFallback).toBe('boolean');
+
+      expect(mockOpenURL).toHaveBeenCalledWith(
+        'https://www.grubhub.com/restaurant/woodys-tavern-ohio-union'
+      );
+      expect(result.opened).toBe(true);
+      expect(result.usedFallback).toBe(true);
+      expect(result.target).toBe(
+        'https://www.grubhub.com/restaurant/woodys-tavern-ohio-union'
+      );
+    });
+
+    it('catches and reports failure gracefully when both app and web launches throw', async () => {
+      mockCanOpenURL.mockRejectedValueOnce(new Error('Native scheme unsupported'));
+      mockOpenURL.mockRejectedValueOnce(new Error('Browser blocked popup'));
+
+      const result = await openVenueOrder(mockVenueSlugOnly);
+
+      expect(result.opened).toBe(false);
+      expect(result.usedFallback).toBe(true);
+      expect(result.target).toBe(
+        'https://www.grubhub.com/restaurant/woodys-tavern-ohio-union'
+      );
+      expect(result.error).toBe('Browser blocked popup');
     });
   });
 

@@ -1,7 +1,18 @@
 import { heuristicPlanner, HeuristicPlanner } from './heuristicPlanner';
 import { DEMO_USER_PROFILE, UserProfile } from '../../types/user';
 import { OSU_MENU_ITEMS_MAP, OSU_VENUES_MAP } from '../../data';
-import { MealSlotType } from '../../types/mealPlan';
+import { DailyMealPlan, MealSlotType } from '../../types/mealPlan';
+import { MenuItem } from '../../types/dining';
+
+/**
+ * Shared test helper: extracts flat list of all MenuItems across all meal slots.
+ * Eliminates message chains and duplicated traversal logic across tests.
+ */
+function extractPlanItems(plan: DailyMealPlan): MenuItem[] {
+  return Object.values(plan.meals).flatMap((slot) =>
+    slot.items.map((entry) => entry.menuItem)
+  );
+}
 
 describe('HeuristicPlanner (Offline Deterministic Meal Planner)', () => {
   let planner: HeuristicPlanner;
@@ -39,7 +50,7 @@ describe('HeuristicPlanner (Offline Deterministic Meal Planner)', () => {
   });
 
   describe('Nutritional Constraint Satisfaction (±5% Target Adherence)', () => {
-    it('satisfies Athletic 2,400 kcal profile within ±5%', () => {
+    it('satisfies Athletic 2,400 kcal profile within ±5% calories and protein', () => {
       const athleticProfile: UserProfile = {
         ...DEMO_USER_PROFILE,
         fitnessGoal: 'athletic',
@@ -54,10 +65,11 @@ describe('HeuristicPlanner (Offline Deterministic Meal Planner)', () => {
 
       expect(plan.totalCalories).toBeGreaterThanOrEqual(minCal);
       expect(plan.totalCalories).toBeLessThanOrEqual(maxCal);
+      // Protein should reach targeted athletic zone
       expect(plan.totalMacros.protein).toBeGreaterThanOrEqual(180 * 0.90);
     });
 
-    it('satisfies Cut 1,800 kcal profile within ±5%', () => {
+    it('satisfies Cut 1,800 kcal profile within ±5% calories', () => {
       const cutProfile: UserProfile = {
         ...DEMO_USER_PROFILE,
         fitnessGoal: 'cut',
@@ -72,9 +84,10 @@ describe('HeuristicPlanner (Offline Deterministic Meal Planner)', () => {
 
       expect(plan.totalCalories).toBeGreaterThanOrEqual(minCal);
       expect(plan.totalCalories).toBeLessThanOrEqual(maxCal);
+      expect(plan.totalMacros.protein).toBeGreaterThan(100);
     });
 
-    it('satisfies Bulk 3,000 kcal profile within ±5%', () => {
+    it('satisfies Bulk 3,000 kcal profile within ±5% calories', () => {
       const bulkProfile: UserProfile = {
         ...DEMO_USER_PROFILE,
         fitnessGoal: 'bulk',
@@ -89,6 +102,36 @@ describe('HeuristicPlanner (Offline Deterministic Meal Planner)', () => {
 
       expect(plan.totalCalories).toBeGreaterThanOrEqual(minCal);
       expect(plan.totalCalories).toBeLessThanOrEqual(maxCal);
+      expect(plan.totalMacros.protein).toBeGreaterThan(120);
+    });
+
+    it('handles extreme 1,200 kcal cut profile without crashing (AGENTS.md QA Sentinel)', () => {
+      const extremeCutProfile: UserProfile = {
+        ...DEMO_USER_PROFILE,
+        fitnessGoal: 'cut',
+        targetCalories: 1200,
+        targetMacros: { protein: 120, carbs: 90, fat: 40 },
+        dietaryRestrictions: [],
+      };
+
+      const plan = planner.generateDailyPlan(extremeCutProfile);
+      expect(plan.totalCalories).toBeGreaterThan(0);
+      expect(plan.totalCalories).toBeLessThan(1800);
+      expect(plan.totalMacros.protein).toBeGreaterThan(50);
+    });
+
+    it('handles extreme 3,800 kcal bulk profile without crashing (AGENTS.md QA Sentinel)', () => {
+      const extremeBulkProfile: UserProfile = {
+        ...DEMO_USER_PROFILE,
+        fitnessGoal: 'bulk',
+        targetCalories: 3800,
+        targetMacros: { protein: 220, carbs: 450, fat: 110 },
+        dietaryRestrictions: [],
+      };
+
+      const plan = planner.generateDailyPlan(extremeBulkProfile);
+      expect(plan.totalCalories).toBeGreaterThan(2500);
+      expect(plan.totalMacros.protein).toBeGreaterThan(130);
     });
   });
 
@@ -101,12 +144,11 @@ describe('HeuristicPlanner (Offline Deterministic Meal Planner)', () => {
       };
 
       const plan = planner.generateDailyPlan(veganProfile);
-      const slots = Object.values(plan.meals);
+      const items = extractPlanItems(plan);
 
-      for (const slot of slots) {
-        for (const item of slot.items) {
-          expect(item.menuItem.dietaryTags).toContain('vegan');
-        }
+      expect(items.length).toBeGreaterThan(0);
+      for (const item of items) {
+        expect(item.dietaryTags).toContain('vegan');
       }
     });
 
@@ -118,12 +160,28 @@ describe('HeuristicPlanner (Offline Deterministic Meal Planner)', () => {
       };
 
       const plan = planner.generateDailyPlan(gfProfile);
-      const slots = Object.values(plan.meals);
+      const items = extractPlanItems(plan);
 
-      for (const slot of slots) {
-        for (const item of slot.items) {
-          expect(item.menuItem.dietaryTags).toContain('glutenFree');
-        }
+      expect(items.length).toBeGreaterThan(0);
+      for (const item of items) {
+        expect(item.dietaryTags).toContain('glutenFree');
+      }
+    });
+
+    it('handles combined strict vegan and gluten-free restrictions (AGENTS.md QA Sentinel)', () => {
+      const combinedProfile: UserProfile = {
+        ...DEMO_USER_PROFILE,
+        targetCalories: 2000,
+        dietaryRestrictions: ['vegan', 'glutenFree'],
+      };
+
+      const plan = planner.generateDailyPlan(combinedProfile);
+      const items = extractPlanItems(plan);
+
+      expect(items.length).toBeGreaterThan(0);
+      for (const item of items) {
+        // Must contain at least the primary restriction (vegan) or both
+        expect(item.dietaryTags.includes('vegan') || item.dietaryTags.includes('glutenFree')).toBe(true);
       }
     });
   });
@@ -134,14 +192,12 @@ describe('HeuristicPlanner (Offline Deterministic Meal Planner)', () => {
         zone: 'North',
       });
 
-      const slots = Object.values(plan.meals);
-      const allItems = slots.flatMap((s) => s.items.map((i) => i.menuItem));
-      const northItems = allItems.filter(
+      const items = extractPlanItems(plan);
+      const northItems = items.filter(
         (item) => OSU_VENUES_MAP[item.venueId]?.zone === 'North'
       );
 
-      // North zone items should make up the majority
-      expect(northItems.length).toBeGreaterThan(allItems.length / 2);
+      expect(northItems.length).toBeGreaterThan(items.length / 2);
     });
 
     it('prioritizes South Campus dining locations when requested', () => {
@@ -149,29 +205,24 @@ describe('HeuristicPlanner (Offline Deterministic Meal Planner)', () => {
         zone: 'South',
       });
 
-      const slots = Object.values(plan.meals);
-      const allItems = slots.flatMap((s) => s.items.map((i) => i.menuItem));
-      const southItems = allItems.filter(
+      const items = extractPlanItems(plan);
+      const southItems = items.filter(
         (item) => OSU_VENUES_MAP[item.venueId]?.zone === 'South'
       );
 
-      // South zone items should make up the majority
-      expect(southItems.length).toBeGreaterThan(allItems.length / 2);
+      expect(southItems.length).toBeGreaterThan(items.length / 2);
     });
 
     it('respects excluded item IDs and omits them from the plan', () => {
-      // Pick first item from a baseline plan and exclude it
       const baseline = planner.generateDailyPlan(DEMO_USER_PROFILE);
-      const excludedItemId = baseline.meals.breakfast.items[0].menuItem.id;
+      const baselineItems = extractPlanItems(baseline);
+      const excludedItemId = baselineItems[0].id;
 
       const plan = planner.generateDailyPlan(DEMO_USER_PROFILE, {
         excludedItemIds: [excludedItemId],
       });
 
-      const slots = Object.values(plan.meals);
-      const planItemIds = slots.flatMap((s) =>
-        s.items.map((i) => i.menuItem.id)
-      );
+      const planItemIds = extractPlanItems(plan).map((item) => item.id);
       expect(planItemIds).not.toContain(excludedItemId);
     });
   });

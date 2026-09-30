@@ -9,6 +9,7 @@ import {
   ActivityLevel,
 } from './nutrition';
 import { FitnessGoal } from '../types/user';
+import { lightTheme } from '../constants/theme';
 
 describe('Nutrition & TDEE Calculation Utilities', () => {
   describe('calculateBmr (Mifflin-St Jeor equation)', () => {
@@ -138,7 +139,7 @@ describe('Nutrition & TDEE Calculation Utilities', () => {
       expect(breakdown.totalScore).toBe(100);
       expect(breakdown.tier).toBe('Campus Legend');
       expect(breakdown.tierVariant).toBe('scarlet');
-      expect(breakdown.tierColor).toBe('#BA0C2F');
+      expect(breakdown.tierColor).toBe(lightTheme.colors.scarlet);
     });
 
     it('classifies RPAC Beast tier for 75-89 score', () => {
