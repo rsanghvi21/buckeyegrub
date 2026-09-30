@@ -213,10 +213,11 @@
   - [x] `src/utils/nutrition.test.ts` (TDEE, BMR, macro distributions, Buckeye Power Score)
   - [x] `src/services/grubhub/deepLinkService.test.ts` (venue URL mapping, deep-link protocol contract)
   - [x] `src/services/ai/heuristicPlanner.test.ts` (validates macro constraint solver, ±5% tolerance)
+  - [x] `src/__tests__/crossPlatform.test.ts` (responsive viewport breakpoints, design tokens, safe-area adaptation)
 - [x] Test cross-platform rendering:
   - [x] Verify layout responsiveness on desktop browser and mobile viewport emulator.
   - [x] Verify clean Expo web bundle export (`npx expo export --platform web`).
-- **Gate 9 Acceptance Criteria**: [PASSED] Full TypeScript compilation check (`npm run type-check` / `npx tsc --noEmit`) clean with 0 errors; 48/48 Jest unit tests passed across nutrition, deep-link, and heuristic planner test suites; zero regressions across 340+ assertions in all standalone verification suites; Expo web bundle exported cleanly with 3,196 modules via Metro bundler.
+- **Gate 9 Acceptance Criteria**: [PASSED] Full TypeScript compilation check (`npm run type-check` / `npx tsc --noEmit`) clean with 0 errors; 61/61 Jest unit tests passed across nutrition, deep-link, heuristic planner, and cross-platform layout test suites; zero regressions across 350+ assertions in all standalone verification suites; Expo web bundle exported cleanly with 3,196 modules via Metro bundler.
 - **Commit History**:
   - `744b9a5` (2026-09-30T11:04:00-04:00): `feat(testing): implement checkpoint 9 - automated verification & cross-platform testing`
   - `c75d6d3` (2026-09-30T11:12:49-04:00): `fix(remediation): address code review standards and spec findings for checkpoint 9 and 10`

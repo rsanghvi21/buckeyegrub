@@ -8,7 +8,6 @@ import {
   ACTIVITY_LABELS,
   ActivityLevel,
 } from './nutrition';
-import { FitnessGoal } from '../types/user';
 import { lightTheme } from '../constants/theme';
 
 describe('Nutrition & TDEE Calculation Utilities', () => {

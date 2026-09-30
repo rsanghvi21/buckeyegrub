@@ -65,11 +65,12 @@ describe('HeuristicPlanner (Offline Deterministic Meal Planner)', () => {
 
       expect(plan.totalCalories).toBeGreaterThanOrEqual(minCal);
       expect(plan.totalCalories).toBeLessThanOrEqual(maxCal);
-      // Protein should reach targeted athletic zone
-      expect(plan.totalMacros.protein).toBeGreaterThanOrEqual(180 * 0.90);
+      // Protein constraint solver achieves ±5% adherence (171g - 189g)
+      expect(plan.totalMacros.protein).toBeGreaterThanOrEqual(180 * 0.95);
+      expect(plan.totalMacros.protein).toBeLessThanOrEqual(180 * 1.05);
     });
 
-    it('satisfies Cut 1,800 kcal profile within ±5% calories', () => {
+    it('satisfies Cut 1,800 kcal profile within ±5% calories and macro targets', () => {
       const cutProfile: UserProfile = {
         ...DEMO_USER_PROFILE,
         fitnessGoal: 'cut',
@@ -84,10 +85,12 @@ describe('HeuristicPlanner (Offline Deterministic Meal Planner)', () => {
 
       expect(plan.totalCalories).toBeGreaterThanOrEqual(minCal);
       expect(plan.totalCalories).toBeLessThanOrEqual(maxCal);
-      expect(plan.totalMacros.protein).toBeGreaterThan(100);
+      // High-protein cut: protein stays within ±10% window
+      expect(plan.totalMacros.protein).toBeGreaterThanOrEqual(155 * 0.90);
+      expect(plan.totalMacros.protein).toBeLessThanOrEqual(155 * 1.10);
     });
 
-    it('satisfies Bulk 3,000 kcal profile within ±5% calories', () => {
+    it('satisfies Bulk 3,000 kcal profile within ±5% calories and macro targets', () => {
       const bulkProfile: UserProfile = {
         ...DEMO_USER_PROFILE,
         fitnessGoal: 'bulk',
@@ -102,7 +105,9 @@ describe('HeuristicPlanner (Offline Deterministic Meal Planner)', () => {
 
       expect(plan.totalCalories).toBeGreaterThanOrEqual(minCal);
       expect(plan.totalCalories).toBeLessThanOrEqual(maxCal);
-      expect(plan.totalMacros.protein).toBeGreaterThan(120);
+      // Bulk target protein adherence within ±10%
+      expect(plan.totalMacros.protein).toBeGreaterThanOrEqual(190 * 0.90);
+      expect(plan.totalMacros.protein).toBeLessThanOrEqual(190 * 1.10);
     });
 
     it('handles extreme 1,200 kcal cut profile without crashing (AGENTS.md QA Sentinel)', () => {
@@ -180,8 +185,26 @@ describe('HeuristicPlanner (Offline Deterministic Meal Planner)', () => {
 
       expect(items.length).toBeGreaterThan(0);
       for (const item of items) {
-        // Must contain at least the primary restriction (vegan) or both
-        expect(item.dietaryTags.includes('vegan') || item.dietaryTags.includes('glutenFree')).toBe(true);
+        expect(item.dietaryTags).toContain('vegan');
+        expect(item.dietaryTags).toContain('glutenFree');
+      }
+    });
+
+    it('falls back gracefully to primary restriction when combined restrictions match insufficient catalog items', () => {
+      const rareProfile: UserProfile = {
+        ...DEMO_USER_PROFILE,
+        targetCalories: 2000,
+        // halal + vegan has very few items in catalog (< 4 items)
+        dietaryRestrictions: ['halal', 'vegan'],
+      };
+
+      const plan = planner.generateDailyPlan(rareProfile);
+      const items = extractPlanItems(plan);
+
+      expect(items.length).toBeGreaterThan(0);
+      // Confirms all items adhere to primary restriction without throwing or failing
+      for (const item of items) {
+        expect(item.dietaryTags).toContain('halal');
       }
     });
   });

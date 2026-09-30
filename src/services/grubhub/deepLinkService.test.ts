@@ -16,25 +16,37 @@ jest.mock('expo-linking', () => ({
 }));
 
 describe('Grubhub Deep-Link Service', () => {
-  const mockVenueWithCuratedUrls: DiningVenue = {
+  function createMockVenue(overrides: Partial<DiningVenue> = {}): DiningVenue {
+    return {
+      id: 'test-venue',
+      name: 'Test Campus Venue',
+      shortName: 'Test',
+      slug: 'test-venue',
+      description: 'Test campus dining venue',
+      zone: 'North',
+      venueType: 'cafe',
+      acceptedPayments: ['dining_dollars', 'buckid_cash'],
+      hasMobileOrdering: true,
+      address: '100 W Woodruff Ave',
+      operatingHours: {},
+      coordinates: { latitude: 40.005, longitude: -83.013 },
+      ...overrides,
+    };
+  }
+
+  const mockVenueWithCuratedUrls = createMockVenue({
     id: 'test-curl',
     name: 'Curl Market',
     shortName: 'Curl',
     slug: 'curl-market',
     description: 'Premier north campus marketplace',
-    zone: 'North',
-    venueType: 'cafe',
-    acceptedPayments: ['dining_dollars', 'buckid_cash'],
-    hasMobileOrdering: true,
     grubhubSlug: 'curl-market-test',
     grubhubUrl: 'https://www.grubhub.com/restaurant/curl-market-columbus/12345',
     grubhubUri: 'grubhub://restaurant/curl-market-columbus/12345',
     address: '80 W Woodruff Ave',
-    operatingHours: {},
-    coordinates: { latitude: 40.005, longitude: -83.013 },
-  };
+  });
 
-  const mockVenueSlugOnly: DiningVenue = {
+  const mockVenueSlugOnly = createMockVenue({
     id: 'test-woody',
     name: "Woody's Tavern",
     shortName: "Woody's",
@@ -42,15 +54,12 @@ describe('Grubhub Deep-Link Service', () => {
     description: 'Casual campus dining and pub classics',
     zone: 'South',
     venueType: 'retail',
-    acceptedPayments: ['dining_dollars', 'buckid_cash'],
-    hasMobileOrdering: true,
     grubhubSlug: 'woodys-tavern-ohio-union',
     address: '1739 N High St',
-    operatingHours: {},
     coordinates: { latitude: 39.998, longitude: -83.008 },
-  };
+  });
 
-  const mockVenueUnmapped: DiningVenue = {
+  const mockVenueUnmapped = createMockVenue({
     id: 'test-unmapped',
     name: 'Unmapped Venue',
     shortName: 'Unmapped',
@@ -61,9 +70,8 @@ describe('Grubhub Deep-Link Service', () => {
     acceptedPayments: ['swipe', 'dining_dollars', 'buckid_cash'],
     hasMobileOrdering: false,
     address: '123 Campus Way',
-    operatingHours: {},
     coordinates: { latitude: 40.001, longitude: -83.02 },
-  };
+  });
 
   describe('buildGrubhubWebUrl', () => {
     it('returns curated grubhubUrl when present on venue', () => {

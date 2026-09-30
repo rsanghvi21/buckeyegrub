@@ -181,7 +181,7 @@ Development is tracked through the milestone checkpoints in `checklist.md`:
 - [x] Checkpoint 6: Grubhub Deep-Link & Order Assistant Modal (Customization copier, mobile scheme handoff)
 - [x] Checkpoint 7: Core Screens & Navigation (Dashboard, AI Planner, Menus, Saved, Profile)
 - [x] Checkpoint 8: Gamification, Financial Trackers & Polish (Power Score, streaks, 35% discount calculator, toasts)
-- [x] Checkpoint 9: Automated Verification & Cross-Platform Testing (Jest 30 suites, clean web build export)
+- [x] Checkpoint 9: Automated Verification & Cross-Platform Testing (61 Jest unit & layout tests across 4 suites, clean web build export)
 - [x] Checkpoint 10: Final Documentation & Release Readiness (Comprehensive README, walkthrough demonstration)
 
 ---
